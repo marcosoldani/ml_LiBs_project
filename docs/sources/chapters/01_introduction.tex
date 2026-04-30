@@ -1,0 +1,102 @@
+\chapter{Introduzione}
+\label{chap:introduction}
+
+\paragraph{Riassunto del capitolo.} Questo capitolo inquadra il
+problema: la caratterizzazione di celle Litio-Ione tramite spettroscopia
+di impedenza è costosa in termini di tempo macchina e operatore, e
+genera dataset alto-dimensionali (Aging, Temperatura, SOC, Frequenza)
+in cui non sempre tutte le combinazioni sono disponibili. Il progetto,
+svolto in collaborazione col Politecnico di Milano, parte da questa
+esigenza e definisce tre obiettivi predittivi: ricostruzione di curve
+mancanti, classificazione binaria young/old, interpolazione di un
+intero livello di invecchiamento. Sopra al deliverable formale (tre
+notebook Jupyter) abbiamo poi costruito \emph{di nostra iniziativa}
+una piccola piattaforma MLOps end-to-end, oggetto del
+\cref{chap:mlops}.
+
+\section{Contesto}
+
+Le batterie Litio-Ione sono il sostrato energetico dominante della
+mobilità elettrica, dei dispositivi consumer e dello stoccaggio
+stazionario. La loro caratterizzazione lungo il ciclo di vita richiede
+strumenti capaci di catturare \emph{processi elettrochimici eterogenei}
+(trasporto di carica, doppio strato, diffusione) che si manifestano su
+scale di frequenza differenti. Lo strumento più informativo e meno
+invasivo è la \textbf{Galvanostatic Electrochemical Impedance
+Spectroscopy (\acrshort{geis})}: si inietta una piccola corrente
+sinusoidale a molte frequenze e si misura la risposta in tensione,
+ricavando l'impedenza complessa
+$Z(f) = \mathrm{Re}(Z) + j\,\mathrm{Im}(Z)$. Il piano di Nyquist
+$(\mathrm{Re}(Z), -\mathrm{Im}(Z))$ traduce queste misure in una firma
+geometrica che evolve con \emph{aging}, \emph{temperatura} e \emph{state
+of charge}.
+
+Acquisire un dataset GEIS è costoso: ogni curva richiede minuti di
+strumentazione di precisione, pilotaggio termico stabile e protezioni
+della cella. Una caratterizzazione completa di una pouch
+\acrshort{licoo2} su una matrice $5 \times 8 \times 5$
+(aging $\times$ temperatura $\times$ SOC) impiega nell'ordine delle
+decine di ore. Diventa quindi rilevante chiedersi:
+\begin{itemize}
+  \item \emph{Possiamo evitare di misurare alcune coppie (Aging,
+        Temperatura) e ricostruirle dai dati esistenti?}
+  \item \emph{Dati un livello di Aging e un livello di SOC mai
+        osservati in addestramento, possiamo classificare come
+        ``young'' o ``old'' le 8 curve di Nyquist (una per temperatura)
+        di quella coppia, leggendo solo la loro forma?}
+  \item \emph{Possiamo prevedere un intero stadio di invecchiamento mai
+        osservato direttamente?}
+\end{itemize}
+
+Il dataset utilizzato in questo progetto è stato fornito dal
+\textbf{Politecnico di Milano} nell'ambito di una collaborazione di
+ricerca; il progetto è stato sviluppato presso \textbf{SUPSI -- DTI}
+come progetto di semestre.
+
+\section{Obiettivi del progetto}
+
+\subsection{Compito primario}
+
+Il compito primario era \textbf{sviluppare tre notebook Jupyter} -- uno
+per ciascuna delle tre domande sopra elencate -- in cui addestrare e
+valutare modelli di machine learning capaci di:
+\begin{enumerate}[leftmargin=*]
+  \item ricostruire una coppia $(Aging, Temperatura)$ esclusa dal
+        training (regressione multi-output, Leave-One-Out);
+  \item dati un livello di Aging e un livello di SOC, classificare
+        come \emph{young} (Aging $\leq 2$) o \emph{old}
+        (Aging $\geq 3$) le \textbf{8 curve di Nyquist} (una per
+        temperatura) di quella coppia, tenute fuori dall'addestramento
+        (classificazione binaria);
+  \item interpolare un \emph{intero} livello di invecchiamento mai
+        osservato in addestramento (regressione multi-output, Leave-One-Aging-Out).
+\end{enumerate}
+
+Per ogni task il deliverable era un benchmark di modelli con metriche
+d'accuratezza, scelta del modello vincente ed una motivazione tecnica.
+
+\subsection{Estensione volontaria (non richiesta)}
+
+Una volta consolidati i tre notebook, abbiamo deciso \emph{di nostra
+iniziativa} di costruire intorno a essi una piccola piattaforma per
+mostrare i risultati a un utente non-developer e per esercitarci nelle
+prassi MLOps di settore. Questa estensione comprende:
+\begin{itemize}
+  \item un package Python (\codefile{src/}) che incapsula la logica dei
+        notebook in funzioni testabili e riutilizzabili;
+  \item un backend HTTP \texttt{FastAPI}~\cite{fastapi} con OpenAPI e CORS
+        configurabile;
+  \item un frontend \texttt{React + TypeScript + Vite} che consuma le
+        \acrshort{api} e renderizza grafici Plotly;
+  \item experiment tracking con MLflow~\cite{mlflow2018} (parent run per
+        task, child run per modello);
+  \item suite di 81 test pytest con coverage gate al 90\,\% in CI (95\,\% attuale);
+  \item containerizzazione (Dockerfile multistage + compose);
+  \item un modulo di \textbf{drift detection} (KS + PSI) con CLI ed
+        endpoint REST.
+\end{itemize}
+
+Va sottolineato che \textbf{questo livello di ingegnerizzazione non era
+richiesto}; la consegna formale era costituita dai soli notebook. Le
+sezioni che seguono trattano insieme entrambe le parti: il \emph{cuore}
+ML predittivo e l'\emph{infrastruttura} costruita sopra.

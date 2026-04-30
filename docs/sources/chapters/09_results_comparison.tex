@@ -1,0 +1,109 @@
+\chapter{Confronto consolidato dei tre task}
+\label{chap:results}
+
+\paragraph{Riassunto del capitolo.} Il capitolo aggrega i risultati dei
+tre task in un'unica tabella di confronto, ordina i task per difficoltà
+empirica (Task 2 $\prec$ Task 1 $\prec$ Task 3) e distilla tre lezioni
+trasversali: \emph{(i)} la giusta strategia di cross-validation vale
+più del giusto modello, \emph{(ii)} il GridSearchCV non porta
+miglioramenti misurabili senza un intervallo di confidenza, \emph{(iii)}
+il feature engineering minimale e fisicamente motivato batte ensemble
+ciechi più sofisticati. Verifichiamo infine la coerenza fra i numeri
+dei notebook esplorativi e quelli prodotti dal codice di produzione.
+
+\section{Tabella consolidata}
+
+\begin{table}[H]
+  \centering
+  \small
+  \caption{Modelli vincenti e metriche-chiave per ciascun task (run di
+  default, seed 42).}
+  \label{tab:results-overall}
+  \begin{tabularx}{\linewidth}{@{}p{2.6cm} p{3.2cm} X@{}}
+    \toprule
+    \textbf{Task} & \textbf{Miglior modello} & \textbf{Metrica chiave} \\
+    \midrule
+    Task 1 -- Leave-One-Out & KNN ($k{=}10$, weight \texttt{distance}) & $R^{2} = 0.9909$ \\
+    Task 2 -- Young / Old & SVM-RBF ($C{=}10$, $\gamma{=}$\texttt{scale}) & Acc. $= 1.0000$ sulle 8 curve del hold-out $(Aging{=}4, SOC{=}3)$; degrada al confine $\sim 0.50$ per coppie come $(3, 4)$ \\
+    Task 3 -- Aging Interpolation & KNN ($k{=}10$, weight \texttt{distance}) & $R^{2} = 0.9862$ \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\section{Difficoltà relativa}
+
+Empiricamente, il \emph{ranking} di difficoltà è:
+
+\[
+\text{Task 2} \;\prec\; \text{Task 1} \;\prec\; \text{Task 3}.
+\]
+
+\begin{itemize}
+  \item \textbf{Task 2} è il più semplice agli estremi del dominio
+        ($Aging \in \{0, 4\}$): le 8 curve di Nyquist della coppia
+        sono nettamente distinguibili fra young e old e quasi qualunque
+        modello satura. Diventa invece un problema vero \emph{al
+        confine}, attorno a $Aging \in \{2, 3\}$ --
+        \cref{tab:task2-cross-pair} mostra accuracy che oscillano
+        fra $0.50$ e $1.00$ a seconda del SOC scelto.
+  \item \textbf{Task 1} è di difficoltà intermedia: la (Aging,
+        Temperatura) esclusa è circondata, su almeno una delle due
+        dimensioni, da combinazioni viste durante l'addestramento. Il
+        Gradient Boosting cattura i residui non-lineari su entrambi gli
+        assi.
+  \item \textbf{Task 3} è il più difficile perché un \emph{intero stadio
+        di aging} non è osservato. I tree-based modelli \emph{non
+        estrapolano} (le loro foglie non possono predire al di fuori
+        dell'inviluppo dei target visti); soltanto interpolatori
+        \emph{distance-based} come KNN tengono il ritmo. La performance
+        degrada inoltre ai bordi della finestra termica.
+\end{itemize}
+
+\section{Lezioni trasversali}
+
+\subsection{La giusta CV vale più del modello}
+
+In tutti e tre i task, la differenza fra usare una CV \emph{leakage-free}
+(\acrshort{logo} o \texttt{StratifiedGroupKFold}) e una CV row-wise vale
+più di una settimana di tuning di iperparametri. I numeri di
+\cref{tab:task1-benchmark,tab:task2-benchmark,tab:task3-benchmark} sono
+\emph{realistici} grazie alla scelta di splitter coerenti con il task.
+
+\subsection{Tuning $\neq$ miglioramento}
+
+In tutti e tre i task il GridSearchCV \emph{non migliora} la baseline. È
+un risultato controintuitivo ma istruttivo: con dataset piccoli
+(\num{9805} righe), la varianza fra fold di CV domina la varianza fra
+configurazioni di iperparametri. Il valore del tuning sta nella
+\emph{difesa} della scelta -- mostrare che i default non sono fortunati
+-- più che nel guadagno marginale.
+
+\subsection{Feature engineering minimale, fisicamente motivato}
+
+Le feature più predittive in tutti i task sono quelle che riflettono
+direttamente la fisica:
+\begin{itemize}
+  \item \texttt{inv\_Temp} (Arrhenius) batte \texttt{Temperature} pura;
+  \item \texttt{log\_Freq} cattura la separazione dei processi
+        elettrochimici su decadi;
+  \item le interazioni \texttt{X\_x\_Temp} sono la rappresentazione più
+        compatta della dipendenza incrociata fra invecchiamento e
+        temperatura osservata nei dati.
+\end{itemize}
+
+Aggiungere feature più complesse (es.~modelli equivalenti di circuito
+fitati) avrebbe portato un guadagno marginale a fronte di un costo
+significativo in interpretabilità.
+
+\section{Coerenza fra notebook e produzione}
+
+Una verifica importante è che i numeri prodotti dai notebook esplorativi
+in \codefile{notebooks/} coincidano con quelli prodotti dal codice di
+produzione in \codefile{src/}. Per i tre task lo abbiamo verificato:
+\codefile{run\_leave\_one\_out}, \codefile{run\_classification} e
+\codefile{run\_aging\_interpolation} restituiscono le stesse metriche con
+la stessa configurazione, perché \emph{usano gli stessi moduli} di
+feature engineering, scaling e modelli. La differenza fra notebook e
+produzione è solo l'ergonomia: i notebook hanno markdown, plot Plotly e
+celle interattive; la produzione restituisce dataclass tipizzati che
+attraversano l'API.

@@ -1,0 +1,76 @@
+{
+  "ks_alpha": 0.05,
+  "psi_threshold": 0.25,
+  "n_features": 6,
+  "n_drifted": 3,
+  "share_drifted": 0.5,
+  "drift_detected": true,
+  "features": [
+    {
+      "feature": "Aging",
+      "n_reference": 9805,
+      "n_current": 1965,
+      "ks_statistic": 0.7995920448750637,
+      "ks_p_value": 1.077e-321,
+      "ks_drift": true,
+      "psi": 7.868601979766879,
+      "psi_drift": true,
+      "drift": true
+    },
+    {
+      "feature": "Frequency",
+      "n_reference": 9805,
+      "n_current": 1965,
+      "ks_statistic": 0.0020345853559161926,
+      "ks_p_value": 1.0,
+      "ks_drift": false,
+      "psi": 4.5854982384499756e-05,
+      "psi_drift": false,
+      "drift": false
+    },
+    {
+      "feature": "SOC",
+      "n_reference": 9805,
+      "n_current": 1965,
+      "ks_statistic": 0.0,
+      "ks_p_value": 1.0,
+      "ks_drift": false,
+      "psi": 0.0,
+      "psi_drift": false,
+      "drift": false
+    },
+    {
+      "feature": "Temperature",
+      "n_reference": 9805,
+      "n_current": 1965,
+      "ks_statistic": 0.0017802621864266687,
+      "ks_p_value": 1.0,
+      "ks_drift": false,
+      "psi": 2.8714528740204926e-05,
+      "psi_drift": false,
+      "drift": false
+    },
+    {
+      "feature": "Z_imag",
+      "n_reference": 9805,
+      "n_current": 1965,
+      "ks_statistic": 0.0997624154472779,
+      "ks_p_value": 1.2348207248846321e-14,
+      "ks_drift": true,
+      "psi": 0.06595411807120535,
+      "psi_drift": false,
+      "drift": true
+    },
+    {
+      "feature": "Z_real",
+      "n_reference": 9805,
+      "n_current": 1965,
+      "ks_statistic": 0.1783833091337052,
+      "ks_p_value": 5.299682966482598e-46,
+      "ks_drift": true,
+      "psi": 0.2874568042956786,
+      "psi_drift": true,
+      "drift": true
+    }
+  ]
+}

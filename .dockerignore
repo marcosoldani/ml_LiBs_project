@@ -1,0 +1,11 @@
+.venv
+__pycache__
+.pytest_cache
+.ruff_cache
+*.pyc
+.git
+.github
+notebooks/*.ipynb
+logs/*.log
+models/**/last_run.joblib
+.DS_Store

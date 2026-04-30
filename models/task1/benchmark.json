@@ -1,0 +1,49 @@
+{
+  "excluded_aging": 2,
+  "excluded_temperature": 22.5,
+  "best_model": "K-Nearest Neighbors",
+  "metrics": {
+    "Ridge Regression": {
+      "MSE": 0.295988,
+      "MAE": 0.346164,
+      "R2": 0.630223,
+      "R2_real": 0.745061,
+      "R2_imag": 0.515385
+    },
+    "Random Forest": {
+      "MSE": 0.051198,
+      "MAE": 0.136444,
+      "R2": 0.968215,
+      "R2_real": 0.949888,
+      "R2_imag": 0.986541
+    },
+    "Gradient Boosting": {
+      "MSE": 0.011489,
+      "MAE": 0.06757,
+      "R2": 0.989453,
+      "R2_real": 0.989393,
+      "R2_imag": 0.989513
+    },
+    "K-Nearest Neighbors": {
+      "MSE": 0.007866,
+      "MAE": 0.065253,
+      "R2": 0.990911,
+      "R2_real": 0.993087,
+      "R2_imag": 0.988735
+    },
+    "Bagging (Ridge)": {
+      "MSE": 0.295416,
+      "MAE": 0.345667,
+      "R2": 0.63029,
+      "R2_real": 0.745674,
+      "R2_imag": 0.514907
+    }
+  },
+  "training_time_s": {
+    "Ridge Regression": 0.0032303333282470703,
+    "Random Forest": 0.21994900703430176,
+    "Gradient Boosting": 1.6452829837799072,
+    "K-Nearest Neighbors": 0.016326189041137695,
+    "Bagging (Ridge)": 1.4593279361724854
+  }
+}

@@ -1,0 +1,14 @@
+services:
+  app:
+    build: .
+    image: battery-mlops:latest
+    container_name: battery-mlops-app
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data
+      - ./models:/app/models
+      - ./logs:/app/logs
+    environment:
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped

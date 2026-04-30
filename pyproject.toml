@@ -1,0 +1,58 @@
+[build-system]
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "battery-geis-mlops"
+version = "1.0.0"
+description = "MLOps pipeline for Lithium-Ion battery GEIS impedance analysis"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [
+  { name = "Davide Corso" },
+  { name = "Marco Soldani" },
+]
+license = { text = "MIT" }
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["src*"]
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+addopts = "-q --maxfail=1"
+testpaths = ["tests"]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+]
+
+[tool.coverage.run]
+data_file = ".coverage"
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = false
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+exclude = ["notebooks", ".venv", "build", "dist"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+ignore = ["E501"]
+
+[tool.ruff.format]
+# Match the lint config; Ruff format replaces black + isort + autoflake.
+quote-style = "double"
+indent-style = "space"
+line-ending = "lf"
+docstring-code-format = true
+
+[tool.mypy]
+python_version = "3.11"
+strict = false
+warn_return_any = true
+warn_unused_ignores = true
+ignore_missing_imports = true       # mlflow / joblib stubs are partial
+exclude = ["build/", "dist/", ".venv/", "notebooks/"]

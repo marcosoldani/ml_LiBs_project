@@ -1,4 +1,4 @@
-Aging,Temperature,SOC,Frequency,Z_real,neg_Z_imag
+Aging,Temperature,SOC,Frequency,Z_real,Z_imag
 0,20.0,0,10002.229,3.0045265000000003,-0.91610028
 0,20.0,0,7904.959,2.9715083,-0.66178275
 0,20.0,0,6248.7827,3.0473026,-0.42214073
