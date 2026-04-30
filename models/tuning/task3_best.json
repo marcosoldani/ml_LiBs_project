@@ -1,0 +1,30 @@
+{
+  "Random Forest": {
+    "best_params": {
+      "max_depth": null,
+      "n_estimators": 200
+    },
+    "best_score_neg_mse": -0.08949561993899374,
+    "best_score_mse": 0.08949561993899374,
+    "duration_s": 8.76610517501831
+  },
+  "Gradient Boosting": {
+    "best_params": {
+      "learning_rate": 0.05,
+      "max_depth": 5,
+      "n_estimators": 200
+    },
+    "best_score_neg_mse": -0.07122248036426834,
+    "best_score_mse": 0.07122248036426834,
+    "duration_s": 9.033582210540771
+  },
+  "K-Nearest Neighbors": {
+    "best_params": {
+      "n_neighbors": 10,
+      "weights": "distance"
+    },
+    "best_score_neg_mse": -0.07277570084321339,
+    "best_score_mse": 0.07277570084321339,
+    "duration_s": 0.5792410373687744
+  }
+}

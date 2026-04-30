@@ -1,0 +1,186 @@
+\chapter{Task 3 -- Aging Interpolation}
+\label{chap:task3}
+
+\paragraph{Riassunto del capitolo.} Il terzo e più difficile task
+chiede: caratterizzata la cella a quattro livelli di invecchiamento,
+possiamo prevedere la caratterizzazione completa del quinto -- mai
+osservato -- usando solo gli altri quattro? Lo splitter \acrshort{logo}
+sull'\emph{Aging} simula esattamente questo. KNN distance-weighted
+vince con $R^{2} = 0.986$ perché \emph{interpola} naturalmente nello
+spazio scalato delle feature, mentre Random Forest e Gradient Boosting
+sono limitati dalla loro incapacità di estrapolare oltre l'inviluppo dei
+target visti. La performance degrada al bordo termico
+(\SI{47.5}{\celsius}) ma resta sopra $0.95$.
+
+\section{Problem statement}
+
+\textbf{Domanda di business.} Se in laboratorio caratterizziamo le celle a
+\emph{quattro} stadi di invecchiamento, possiamo prevedere la
+caratterizzazione \emph{completa} del quinto stadio mai osservato?
+
+\textbf{Domanda formale.} Si esclude un intero livello $Aging^*$ dal
+training. Sull'addestramento contiamo $4 \times 8 \times 5 \times 49
+\approx 7845$ misure; sul test, l'aging escluso conta
+$1 \times 8 \times 5 \times 49 \approx 1960$ misure -- 40 curve di Nyquist
+da ricostruire (8 temperature $\times$ 5 SOC).
+
+\textbf{Difficoltà.} Maggiore di Task 1: lì il modello vedeva durante
+l'addestramento \emph{altre} curve allo stesso $Aging^*$ (per le altre
+temperature) e altre $Temperature^*$ (per gli altri aging). Qui $Aging^*$
+non viene mai osservato.
+
+\section{Setup sperimentale}
+
+\begin{itemize}
+  \item \textbf{Aging escluso (default):} 2 (centrale, per testare
+        l'interpolazione anziché l'estrapolazione).
+  \item \textbf{Feature:} le stesse nove di \cref{tab:regression-features}.
+  \item \textbf{Target:} $(\mathrm{Re}(Z), \mathrm{Im}(Z))$, multi-output.
+  \item \textbf{Split:} maschera booleana sull'attributo $Aging$.
+  \item \textbf{Funzione di produzione:}
+        \codefile{src/models/task3\_aging.py::run\_aging\_interpolation}
+        $\to$ \texttt{AgingInterpResult} con metriche per-temperatura.
+\end{itemize}
+
+\section{Modelli candidati}
+
+Task 3 utilizza esattamente la stessa funzione factory di Task 1
+(\codefile{src/models/registry.py::regression\_models}), perché lo
+spazio delle feature e il target sono identici. Gli iperparametri di
+default sono quelli della~\cref{tab:task1-models}: Ridge $\alpha=1$,
+Random Forest $n_\text{estim}=200$ con $d_\text{max}=15$ e
+$\text{leaves} \geq 2$, Gradient Boosting $n_\text{estim}=150$, $d=5$,
+$\eta=0.1$ in \texttt{MultiOutputRegressor}, KNN $k=10$ con weight
+\texttt{distance}, e Bagging (Ridge) con 30 estimator e sub-sample
+$0.8$.
+
+\section{Risultati}
+
+\begin{table}[H]
+  \centering
+  \caption{Benchmark Task 3 (esclusione: $Aging = 2$). Anche qui il
+  baseline \emph{mean predictor} è il punto di riferimento $R^{2}\!\approx\!0$
+  contro cui leggere i guadagni.}
+  \label{tab:task3-benchmark}
+  \begin{tabular}{lrrr}
+    \toprule
+    \textbf{Modello} & $R^{2}$ & \acrshort{mse} & \acrshort{mae} \\
+    \midrule
+    K-Nearest Neighbors & \textbf{0.9862} & \textbf{0.0049} & \textbf{0.0449} \\
+    Gradient Boosting   & 0.9795 & 0.0227 & 0.0932 \\
+    Random Forest       & 0.9753 & 0.0287 & 0.0950 \\
+    Ridge               & 0.7293 & 0.1919 & 0.2930 \\
+    Bagging Ridge       & 0.7289 & 0.1924 & 0.2936 \\
+    \midrule
+    \emph{Mean predictor (baseline)} & $\approx 0.0$ & $\mathrm{Var}(y_\text{test})$ & $\mathrm{MAD}(y_\text{test})$ \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\textbf{KNN vince.} Il motivo è strutturale: nello spazio standardizzato
+delle nove feature, predire $Aging = 2$ significa cercare i vicini più
+prossimi nello \emph{strato} di feature
+$(Aging \in \{0, 1, 3, 4\}, \dots)$, e KNN con weight \texttt{distance}
+restituisce una media pesata che è effettivamente un'\emph{interpolazione
+locale}. Random Forest e Gradient Boosting, al contrario, predicono solo
+medie di foglie osservate durante il training: \emph{non} possono
+estrapolare a un valore di $Aging$ mai visto, e le loro predizioni si
+appiattiscono verso il centro convesso dei target visti.
+
+\subsection{Analisi per temperatura}
+
+\codefile{run\_aging\_interpolation} restituisce un DataFrame
+\texttt{per\_temperature} con $R^{2}$ e \acrshort{mae} per ciascun
+livello di temperatura. I numeri di seguito si riferiscono al modello
+KNN sul fold di default.
+
+\begin{table}[H]
+  \centering
+  \caption{Performance per temperatura del KNN su Task 3.}
+  \label{tab:task3-per-temp}
+  \begin{tabular}{rrr}
+    \toprule
+    Temperature [\si{\celsius}] & $R^{2}$ & \acrshort{mae} [\milliohm] \\
+    \midrule
+    20.0 & 0.9894 & 0.0643 \\
+    22.5 & 0.9842 & 0.0714 \\
+    25.0 & 0.9860 & 0.0439 \\
+    27.5 & 0.9872 & 0.0332 \\
+    30.0 & 0.9815 & 0.0489 \\
+    35.0 & 0.9787 & 0.0254 \\
+    40.0 & 0.9739 & 0.0300 \\
+    47.5 & \textbf{0.9566} & 0.0422 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+L'$R^{2}$ è massimo nelle temperature centrali (\SI{27.5}{\celsius}:
+$0.9872$) e degrada al bordo superiore (\SI{47.5}{\celsius}:
+$0.9566$): è un effetto di \emph{boundary} atteso, oltre il bordo non
+ci sono campioni che possano sostenere l'interpolazione e KNN ricade su
+vicini più ``lontani'' nello spazio scalato. La \acrshort{mae} resta
+sempre sotto $\SI{0.072}{\milli\ohm}$ in modulo.
+
+\section{Hyperparameter tuning}
+
+\textbf{Splitter:} \acrshort{logo} sul gruppo $Aging$ (5 fold, ognuno
+tiene fuori un livello di aging — niente sottocampionamento perché la
+dimensione è già piccola).
+
+\textbf{Grid (da \codefile{config.yaml}):}
+\begin{lstlisting}[language=YAML]
+knn:
+  n_neighbors: [5, 10, 15]
+  weights:     [uniform, distance]
+\end{lstlisting}
+
+Sei combinazioni $\times$ 5 fold = 30 fit. La metrica di selezione è
+la media \acrshort{mse} sui 5 fold \acrshort{logo}. Rispetto al
+default registry $\{k=10, \text{weights}=\text{distance}\}$ il tuning
+identifica configurazioni con $k$ leggermente più piccolo, ma il
+guadagno sul fold di test non è statisticamente distinguibile. Vale
+lo stesso caveat statistico: con 5 fold informativamente molto diversi
+e una sola valutazione finale, senza intervallo di confidenza
+calcolato per bootstrap (cfr.~\cref{sec:bootstrap}) non possiamo
+concludere che il tuning peggiori. Manteniamo la baseline.
+
+\section{Visualizzazioni}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.78\linewidth]{task3_metrics_bar.pdf}
+  \caption{$R^{2}$ sul fold di test per i cinque modelli candidati.
+  KNN distanza-pesato è il solo a interpolare correttamente; i modelli
+  lineari saturano sotto $0.73$.}
+  \label{fig:task3-metrics-bar}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.80\linewidth]{task3_per_temp.pdf}
+  \caption{$R^{2}$ e MAE per livello di temperatura del modello KNN
+  vincitore. La performance degrada al bordo superiore della finestra
+  termica (\SI{47.5}{\celsius}, $R^{2} = 0.957$) per effetto di
+  \emph{boundary}.}
+  \label{fig:task3-per-temp}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.68\linewidth]{task3_grid_sample.pdf}
+  \caption{Quattro curve di Nyquist riconcostruite (rosso) sovrapposte
+  alle vere (nero), prese a due temperature e due SOC diversi. Pur non
+  avendo mai osservato $Aging = 2$ in addestramento, il modello
+  ricostruisce correttamente sia il semicerchio sia la coda diffusiva.}
+  \label{fig:task3-sample}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.78\linewidth]{task3_error_distribution.pdf}
+  \caption{Istogramma degli errori assoluti
+  $\sqrt{\Delta\mathrm{Re}^2 + \Delta\mathrm{Im}^2}$ sul fold di test.
+  Il 95\textsuperscript{o} percentile cade sotto i \SI{0.2}{\milli\ohm},
+  ben dentro la dispersione fisiologica delle misure.}
+  \label{fig:task3-error}
+\end{figure}

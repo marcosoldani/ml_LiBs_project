@@ -1,0 +1,75 @@
+\documentclass[a4paper,11pt,oneside]{report}
+
+\input{preamble}
+\input{glossary}
+
+\addbibresource{bibliography.bib}
+
+\title{\textbf{Battery GEIS MLOps Platform}\\[0.3cm]
+       \large Una pipeline MLOps end-to-end per la spettroscopia di impedenza
+       elettrochimica galvanostatica su celle Litio-Ione}
+\author{Davide Corso \and Marco Soldani}
+\date{Anno Accademico 2025--2026}
+
+\begin{document}
+
+% ── Pagina del titolo ──────────────────────────────────────────────────────
+\begin{titlepage}
+  \centering
+  \vspace*{1cm}
+  {\Large SUPSI -- Scuola Universitaria Professionale della Svizzera Italiana\\
+   Dipartimento Tecnologie Innovative (DTI) \par}
+  \vspace{0.5cm}
+  {\large Progetto di Semestre \par}
+  \vspace{0.3cm}
+  {\large Relatore: Prof.~Loris Cannelli\par}
+  \vspace{0.2cm}
+  {\large \emph{In collaborazione con Politecnico di Milano} \par}
+  \vfill
+  {\Huge\bfseries Battery GEIS MLOps Platform\par}
+  \vspace{0.7cm}
+  {\Large\itshape Una pipeline MLOps end-to-end per la spettroscopia di
+   impedenza elettrochimica galvanostatica su celle Litio-Ione\par}
+  \vfill
+  {\Large \textbf{Davide Corso} \quad\&\quad \textbf{Marco Soldani}\par}
+  \vspace{0.5cm}
+  {\large Anno Accademico 2025--2026\par}
+  \vspace{0.3cm}
+  {\large 28 aprile 2026\par}
+  \vfill
+\end{titlepage}
+
+% ── Front matter ────────────────────────────────────────────────────────────
+\pagenumbering{roman}
+\input{chapters/00_abstract}
+\tableofcontents
+
+\cleardoublepage
+\pagenumbering{arabic}
+
+% ── Capitoli ────────────────────────────────────────────────────────────────
+\input{chapters/01_introduction}
+\input{chapters/02_background}
+\input{chapters/03_dataset}
+\input{chapters/04_methodology}
+\input{chapters/05_task1_loo}
+\input{chapters/06_task2_classification}
+\input{chapters/07_task3_aging}
+\input{chapters/08_mlops_architecture}
+\input{chapters/09_results_comparison}
+\input{chapters/10_monitoring}
+\input{chapters/12_conclusions}
+\input{chapters/13_conclusioni}
+
+% ── Bibliografia ────────────────────────────────────────────────────────────
+\printbibliography[heading=bibintoc, title={Bibliografia}]
+
+% ── Acronimi ────────────────────────────────────────────────────────────────
+\glsaddall
+% Versione compatta: niente numeri di pagina, lista a due colonne stretta.
+\renewcommand*{\glossaryentrynumbers}[1]{}
+\setglossarystyle{long}
+\setlength{\glsdescwidth}{0.78\linewidth}
+\printglossary[type=\acronymtype, title={Acronimi}, toctitle={Acronimi}]
+
+\end{document}

@@ -1,0 +1,199 @@
+\chapter{Architettura \acrshort{mlops}}
+\label{chap:mlops}
+
+\paragraph{Riassunto del capitolo.} Mentre i tre task precedenti
+descrivono il \emph{cuore predittivo} (la consegna richiesta), questo
+capitolo descrive lo stato \emph{to-be} della piattaforma costruita
+volontariamente sopra di essi. Si tratta di un sistema MLOps
+end-to-end: configurazione centralizzata YAML, logging strutturato con
+rotazione, experiment tracking con MLflow, suite di 81 test pytest con
+coverage gate al 90\,\% (95\,\% attuale), integrazione continua su due versioni di Python,
+Dockerfile multi-stage, FastAPI con frontend React e modulo di drift
+detection (KS+PSI). Il fine è dimostrare che gli stessi modelli dei
+notebook possono essere serviti, monitorati e mantenuti come un
+prodotto reale.
+
+Questo capitolo è il cuore \emph{ingegneristico} del report: descrive
+l'architettura della piattaforma e raccoglie le scelte di
+implementazione che, prese insieme, ne fanno un sistema MLOps completo.
+Le aree coperte sono: riproducibilità, configurazione, logging,
+experiment tracking, testing, integrazione continua, containerizzazione
+e deployment, monitoring. Il modello di riferimento concettuale è
+quello descritto da Huyen~\cite{huyen2022designing}, mentre le
+\emph{technical-debt anti-pattern} a cui prestiamo attenzione sono
+quelli identificati da Sculley \emph{et al.}~\cite{sculley2015hidden}
+(glue code, configuration debt, undeclared consumers, ecc.).
+
+\begin{table}[H]
+  \centering
+  \caption{Aree MLOps e componenti del repository.}
+  \label{tab:mlops-areas}
+  \begin{tabularx}{\linewidth}{l X}
+    \toprule
+    \textbf{Area} & \textbf{Implementazione} \\
+    \midrule
+    Riproducibilità & Seed centralizzato, splitter coerenti col task, \codefile{requirements.txt} con upper bound, dataset hash loggato in MLflow. \\
+    Tooling \& configurazione & \codefile{config/config.yaml} centralizzata, \codefile{pyproject.toml} con \texttt{[build-system]} + Ruff/pytest, separazione \codefile{src/}. \\
+    Logging \& troubleshooting & \codefile{src/logger.py} con \texttt{RotatingFileHandler}, log strutturato per modello e task. \\
+    Experiment tracking & \codefile{src/tracking.py} (MLflow opzionale), parent/child run, dataset hash + git SHA. \\
+    Testing & 81 test pytest (di cui 23 sull'API HTTP e 4 sui benchmark persistiti, 11 marcati \texttt{slow}), coverage gate al 90\,\% in CI (95\,\% attuale). \\
+    Integrazione continua & GitHub Actions: \texttt{ruff}, \texttt{pytest}, \texttt{bandit}, \texttt{pip-audit}, \texttt{docker build}. \\
+    Containerizzazione \& deployment & Dockerfile multistage (Node + Python), \texttt{docker-compose.yml}, FastAPI con OpenAPI, CORS env-driven. \\
+    Monitoring & \codefile{src/monitoring/} (KS + PSI), \codefile{scripts/monitor.py}, endpoint REST dedicati. \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\section{Layered design}
+
+L'architettura logica segue tre principi: \emph{stratificazione},
+\emph{single source of truth} e \emph{tipi espliciti}.
+
+\begin{figure}[H]
+  \centering
+  \begin{tcolorbox}[colback=white, colframe=accent, boxrule=0.4pt,
+                    arc=2mm, left=4mm, right=4mm, top=2mm, bottom=2mm]
+\begin{verbatim}
+Frontend layer
+  - frontend/  (React + TypeScript + Vite)
+       |  HTTP / JSON
+       v
+FastAPI bridge (app.py)
+  /health, /api/dataset/*, /api/task{1,2,3}/run,
+  /api/benchmarks/*, /api/predictions/{log,recent},
+  /api/monitoring/drift
+       |  funzioni Python
+       v
+Task modules (src/models)
+  task1_loo, task2_classification, task3_aging,
+  tuning, registry
+       |
+   uses below
+       v
++--- features ----+--- evaluation ---+--- visualization ---+
+|  (src/data)     |  (src/evaluation)|  (src/visualization)|
++-----+-----------+--------+---------+----------+-----------+
+      ^                    ^                    |
+      |                    |                    v
+      +----- data layer ---+         monitoring (src/monitoring)
+            (src/data/loader, preprocessing)
+
+Cross-cutting: src/config, src/logger, src/tracking
+\end{verbatim}
+  \end{tcolorbox}
+  \caption{Layered design del progetto.}
+  \label{fig:arch}
+\end{figure}
+
+\section{Configurazione e riproducibilità}
+
+\codefile{config/config.yaml} è l'unica fonte di verità per: percorsi
+filesystem, livelli del dataset, seed di addestramento, default di task,
+griglie di tuning, soglie di tracking. \codefile{src/config.py} la legge
+una sola volta per processo (\texttt{lru\_cache}), espone helper di path
+(\texttt{models\_path}, \texttt{logs\_path}, ...) e fornisce una
+``dot-access'' lazy via classe \texttt{Config(dict)}. Cambiare un parametro
+si fa modificando lo YAML, mai il codice.
+
+Il file \codefile{requirements.txt} fissa upper bound espliciti su tutte le
+dipendenze dirette (NumPy $<$ 3.0, scikit-learn $<$ 2.0, FastAPI $<$ 1.0,
+...) per evitare che bump major silenziosi rompano la pipeline; il
+tracciamento del SHA del CSV in MLflow chiude il cerchio sul fronte dati.
+
+\section{Logging e troubleshooting}
+
+\codefile{src/logger.py} configura un singolo logger root con stream
+handler stdout e \texttt{RotatingFileHandler} su
+\codefile{logs/pipeline.log} (\SI{10}{\mega\byte} $\times$ 5 backup). Il
+formato è strutturato:
+\begin{lstlisting}
+[2026-04-27 15:42:01] [INFO] src.models.task1_loo - Best model: Gradient Boosting (R2=0.9859)
+\end{lstlisting}
+
+Ogni task module emette una riga per modello con metriche e tempo di
+training; la stessa riga è facile da ingerire da uno strumento esterno
+(Loki, ELK) qualora si volesse spostare il logging \emph{aggregato}.
+
+\section{Experiment tracking con MLflow}
+
+\codefile{src/tracking.py} avvolge MLflow dietro un \texttt{try/except
+ImportError}, rendendolo \emph{opzionale}. Quando installato,
+\texttt{track\_pipeline} apre un \emph{parent run} per task, e
+\texttt{log\_model\_run} apre un \emph{child run} per modello con i suoi
+parametri, le metriche e la durata. Per ciascun parent run logghiamo:
+\begin{itemize}
+  \item SHA git corrente (best-effort);
+  \item SHA-256 del CSV training (\emph{data version});
+  \item snapshot della config YAML;
+  \item parametri fra cui i valori di default e quelli di tuning quando
+        attivi.
+\end{itemize}
+
+Il backend è il file system locale (\codefile{mlruns/}, gitignored): la UI
+si attiva con \texttt{python -m mlflow ui --backend-store-uri mlruns}.
+
+\section{Testing}
+
+La suite \codefile{tests/} (81 test, 95\,\% coverage globale su
+\codefile{src/} + \codefile{app.py}) copre:
+\begin{itemize}
+  \item caricamento e schema (\codefile{test\_data.py},
+        \codefile{test\_preprocessing.py});
+  \item invariants delle feature (\codefile{test\_features.py});
+  \item proprietà delle metriche (\codefile{test\_metrics.py});
+  \item smoke end-to-end per i tre task (\codefile{test\_models.py});
+  \item ogni figura Plotly pubblica (\codefile{test\_plots.py},
+        12 test);
+  \item tracking + tuning (\codefile{test\_tracking\_tuning.py},
+        \codefile{test\_tuning.py});
+  \item drift detection e prediction log (\codefile{test\_monitoring.py});
+  \item l'intero contratto HTTP della FastAPI -- un test per ogni
+        endpoint, payload validi e di errore
+        (\codefile{test\_app\_api.py}, 23 test, di cui i tre payload
+        invalidi del Task 2 sono parametrizzati);
+  \item gli artefatti persistiti dei tre benchmark di default e il
+        \codefile{benchmark\_full\_grid} di Task 2
+        (\codefile{test\_persist\_benchmarks.py}).
+\end{itemize}
+
+Il workflow \codefile{.github/workflows/ci.yml} esegue, su Python 3.11 e
+3.12: \texttt{ruff check}, \texttt{pytest --cov=src --cov-fail-under=75},
+\texttt{bandit -r src app.py}, \texttt{pip-audit -r requirements.txt},
+e -- sui PR e su \texttt{main} -- un \texttt{docker build} di
+validazione.
+
+\section{Deployment}
+
+Il \codefile{Dockerfile} è multistage: lo stage Node compila la SPA React in
+\codefile{frontend/dist}, lo stage Python (\codefile{python:3.12-slim})
+installa le dipendenze e copia \codefile{src/}, \codefile{app.py},
+\codefile{scripts/}, \codefile{config/}, \codefile{data/} e il bundle
+React statico, esponendo Uvicorn su \texttt{0.0.0.0:8000} con healthcheck
+\texttt{/health}. \codefile{docker-compose.yml} monta volumi su
+\codefile{data/}, \codefile{models/}, \codefile{logs/} per la persistenza.
+
+L'API è descritta da uno schema OpenAPI a \texttt{/docs} (Swagger) e
+\texttt{/redoc}. La middleware CORS legge l'origine da
+\texttt{CORS\_ALLOWED\_ORIGINS} (default localhost), così la stessa
+immagine si schiera in ambienti diversi senza ricompilare.
+
+\section{Developer UX}
+
+I workflow comuni sono moduli Python brevi, documentati in
+\codefile{docs/USAGE.md}:
+\begin{itemize}
+  \item \texttt{python -m scripts.prepare\_data} -- preprocessing CSV;
+  \item \texttt{python -m scripts.train\_all} /
+        \texttt{python -m scripts.tune} -- benchmark / tuning;
+  \item \texttt{uvicorn app:app --reload} +
+        \texttt{cd frontend \&\& npm run dev} -- backend e frontend;
+  \item \texttt{python -m mlflow ui --backend-store-uri mlruns} -- UI di
+        tracking;
+  \item \texttt{python -m scripts.monitor --current ...} -- drift report
+        da CLI;
+  \item \texttt{pytest} / \texttt{ruff check src tests scripts app.py}
+        -- qualità.
+\end{itemize}
+
+La CI invoca esattamente gli stessi comandi, eliminando la classica
+divergenza fra "funziona in locale" e "funziona in pipeline".

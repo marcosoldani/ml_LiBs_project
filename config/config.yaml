@@ -1,0 +1,123 @@
+project:
+  name: "Battery GEIS MLOps"
+  version: "1.0.0"
+  description: "MLOps pipeline for Lithium-Ion Battery impedance analysis"
+  authors:
+    - "Davide Corso"
+    - "Marco Soldani"
+
+paths:
+  data_raw: "data/raw"
+  data_processed: "data/processed"
+  models: "models"
+  logs: "logs"
+  outputs: "outputs"
+  raw_mat_file: "GEIS.mat"
+  processed_csv: "batteries_cleaned_dataset.csv"
+
+data:
+  agings: [0, 1, 2, 3, 4]
+  temperatures: [20.0, 22.5, 25.0, 27.5, 30.0, 35.0, 40.0, 47.5]
+  socs: [0, 1, 2, 3, 4]
+  temperature_map:
+    GEIS_20: 20.0
+    GEIS_22_5: 22.5
+    GEIS_25: 25.0
+    GEIS_27_5: 27.5
+    GEIS_30: 30.0
+    GEIS_35: 35.0
+    GEIS_40: 40.0
+    GEIS_47_5: 47.5
+
+training:
+  random_seed: 42
+  test_size: 0.2
+  cv_folds: 5
+
+task1:
+  name: "Leave-One-Out Curve Reconstruction"
+  description: "Predict a single Nyquist plot given the other 39"
+  default_aging: 2
+  default_temperature: 22.5
+  target: ["Z_real", "Z_imag"]
+  models:
+    - "Ridge"
+    - "Random Forest"
+    - "Gradient Boosting"
+    - "K-Nearest Neighbors"
+    - "Bagging (Ridge)"
+
+task2:
+  name: "Young vs Old Classification"
+  description: "Classify a held-out (Aging, SOC) pair as young or old from its Nyquist signature"
+  default_aging: 4
+  default_soc: 3
+  young_max_aging: 2
+  target: "Age_class"
+  models:
+    - "Logistic Regression"
+    - "Random Forest"
+    - "Gradient Boosting"
+    - "Extra Trees"
+    - "K-Nearest Neighbors"
+    - "SVM (RBF)"
+
+task3:
+  name: "Aging Interpolation"
+  description: "Predict an entire aging level from the other four"
+  default_aging: 2
+  target: ["Z_real", "Z_imag"]
+  models:
+    - "Ridge"
+    - "Random Forest"
+    - "Gradient Boosting"
+    - "KNN"
+    - "Bagging Ridge"
+
+logging:
+  level: "INFO"
+  format: "[%(asctime)s] [%(levelname)s] %(name)s - %(message)s"
+  date_format: "%Y-%m-%d %H:%M:%S"
+
+tracking:
+  enabled: true
+  backend_uri: "mlruns"           # local file store, resolved against PROJECT_ROOT
+  experiment_prefix: "battery-geis"  # experiments: battery-geis-task1 / task2 / task3
+
+tuning:
+  enabled: true
+  out_dir: "models/tuning"
+  cv_folds: 3
+  task1:
+    random_forest:
+      n_estimators: [100, 200, 400]
+      max_depth: [10, 15, null]
+    gradient_boosting:
+      n_estimators: [100, 200]
+      max_depth: [3, 5]
+      learning_rate: [0.05, 0.1]
+    knn:
+      n_neighbors: [5, 10, 15]
+      weights: ["uniform", "distance"]
+  task2:
+    random_forest:
+      n_estimators: [100, 200]
+      max_depth: [10, 15, null]
+    gradient_boosting:
+      n_estimators: [100, 200]
+      max_depth: [3, 5]
+      learning_rate: [0.05, 0.1]
+    svm:
+      C: [1.0, 10.0, 100.0]
+      gamma: ["scale", "auto"]
+  task3:
+    random_forest:
+      n_estimators: [100, 200, 400]
+      max_depth: [10, 15, null]
+    gradient_boosting:
+      n_estimators: [100, 200]
+      max_depth: [3, 5]
+      learning_rate: [0.05, 0.1]
+    knn:
+      n_neighbors: [5, 10, 15]
+      weights: ["uniform", "distance"]

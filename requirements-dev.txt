@@ -1,0 +1,18 @@
+-r requirements.txt
+
+# Test runners
+pytest>=8.0,<9.0
+pytest-cov>=4.1,<7.0
+httpx>=0.27,<1.0          # required by fastapi.testclient
+
+# Lint + format + type-check
+ruff>=0.4,<1.0
+mypy>=1.10,<2.0
+
+# Pre-commit hooks (optional but recommended for local dev).
+pre-commit>=3.7,<5.0
+
+# Security scans (CI only, but kept here so a contributor can run them
+# locally with `pip install -r requirements-dev.txt`).
+bandit>=1.7,<2.0
+pip-audit>=2.7,<3.0

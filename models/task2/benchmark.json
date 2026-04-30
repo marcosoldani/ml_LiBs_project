@@ -1,0 +1,47 @@
+{
+  "aging": 4,
+  "soc": 3,
+  "true_class": 1,
+  "true_label": "Old",
+  "best_model": "SVM (RBF)",
+  "metrics": {
+    "Logistic Regression": {
+      "Accuracy": 0.857506,
+      "F1": 0.923288,
+      "AUC": NaN
+    },
+    "Random Forest": {
+      "Accuracy": 0.992366,
+      "F1": 0.996169,
+      "AUC": NaN
+    },
+    "Gradient Boosting": {
+      "Accuracy": 0.989822,
+      "F1": 0.994885,
+      "AUC": NaN
+    },
+    "Extra Trees": {
+      "Accuracy": 0.989822,
+      "F1": 0.994885,
+      "AUC": NaN
+    },
+    "K-Nearest Neighbors": {
+      "Accuracy": 0.994911,
+      "F1": 0.997449,
+      "AUC": NaN
+    },
+    "SVM (RBF)": {
+      "Accuracy": 1.0,
+      "F1": 1.0,
+      "AUC": NaN
+    }
+  },
+  "training_time_s": {
+    "Logistic Regression": 0.07529711723327637,
+    "Random Forest": 0.15652012825012207,
+    "Gradient Boosting": 1.8400650024414062,
+    "Extra Trees": 0.08304595947265625,
+    "K-Nearest Neighbors": 0.030827999114990234,
+    "SVM (RBF)": 2.614349126815796
+  }
+}

@@ -1,0 +1,81 @@
+\chapter{Limiti tecnici}
+\label{chap:conclusions}
+
+\paragraph{Riassunto del capitolo.} Prima di concludere, riconosciamo
+sei limiti reali del lavoro svolto: l'incapacità di estrapolare oltre
+il bordo dell'\emph{Aging} osservato, l'assenza di modellazione della
+variabilità inter-cella, la mancanza di feedback per il concept drift,
+il \emph{tuning paradox} dovuto a fold di CV informativamente
+eterogenei, l'assenza di intervalli di confidenza calcolati per
+bootstrap sulle metriche e la copertura zero del frontend. Sono i punti
+da aggredire per primi se il lavoro venisse esteso a un secondo
+progetto.
+
+\section{Estrapolazione fuori dal dominio osservato}
+
+Il dataset misura cinque livelli di Aging in una finestra
+\emph{specifica}. Predire $Aging = 5$ (oltre il bordo) non è supportato
+dal nostro setup attuale: KNN ricadrebbe sui vicini più prossimi (i
+quattro Aging già osservati) e il valore predetto sarebbe
+sistematicamente \emph{sotto-stimato}. Una mitigazione sarebbe usare
+modelli con prior fisico (es.~Arrhenius parametrizzato sulla
+temperatura, polinomio di basso grado in Aging) per estendere la base.
+
+\section{Cross-cell variability}
+
+Il dataset deriva da \emph{una sola} cella pouch \acrshort{licoo2} da
+\SI{10}{\ampere\hour}. La variabilità inter-cella (tolleranze di
+produzione, batch, condizioni di formazione) non è modellata. Per usare
+la pipeline su un altro form-factor o un'altra chimica (LFP, NMC)
+servirebbe un nuovo training; il modulo di drift detection suonerebbe
+l'allarme appena le distribuzioni di $\mathrm{Re}(Z), \mathrm{Im}(Z)$
+uscissero dall'inviluppo del dataset attuale.
+
+\section{Concept drift}
+
+Il modulo di monitoring rileva \emph{covariate shift}, non
+\emph{concept drift}. In mancanza di un canale di feedback con
+\emph{label veri} per le predizioni in produzione, non è possibile
+osservare il deterioramento del modello in modo diretto. In un sistema
+di laboratorio una soluzione realistica sarebbe \emph{re-misurare
+periodicamente un sottoinsieme di celle} e confrontare le predizioni
+con le misure dirette.
+
+\section{Tuning paradox}
+
+In tutti e tre i task il GridSearchCV non produce un miglioramento sul
+fold di test rispetto ai default. La formulazione corretta è
+statistica: la valutazione finale è single-shot (un solo hold-out
+fold), mentre la selezione del grid è fatta su una media \acrshort{cv}
+di 4--39 fold \acrshort{logo} informativamente molto eterogenei. Senza
+un intervallo di confidenza (bootstrap, cfr.~\cref{sec:bootstrap}) non
+è lecito concludere che ``il tuning peggiora'': è più verosimile che il
+valore tunato cada \emph{dentro} il CI del default.
+
+I sintomi residui sono comunque coerenti con tre ingredienti noti:
+\begin{enumerate}[leftmargin=*]
+  \item dataset relativamente piccolo (\num{9805} righe $=$ $\sim$200
+        curve);
+  \item griglia di iperparametri larga rispetto alla varianza
+        intra-fold;
+  \item splitter LOGO con fold di bordo informativamente diversi.
+\end{enumerate}
+
+\section{Bootstrap dei CI sulle metriche}
+\label{sec:bootstrap}
+
+Nessuna delle tabelle riportate nei \cref{chap:task1,chap:task2,chap:task3}
+include intervalli di confidenza sulle metriche. È un limite reale: una
+differenza di MSE non è interpretabile senza una stima di varianza. La
+soluzione standard è il bootstrap di Efron~\cite{efron1979bootstrap}:
+ricampionare il fold di test con sostituzione $B \approx 1000$ volte e
+riportare il quantile 2.5\,\% e 97.5\,\% di ciascuna metrica. È
+un'aggiunta di poche righe in \codefile{src/evaluation/metrics.py}.
+
+\section{Frontend testing}
+
+La copertura di test sul frontend è zero. Per un progetto di semestre
+è accettabile (UI minimale, nessun stato globale complesso); per andare
+in produzione bisognerebbe aggiungere test di componente
+(React Testing Library, Jest) e un E2E (Playwright o Cypress) per
+verificare che l'integrazione frontend--backend non si rompa.
