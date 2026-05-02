@@ -1,53 +1,64 @@
-\documentclass[a4paper,11pt,oneside]{report}
+%% Battery GEIS MLOps Platform — Progetto di Semestre SUPSI DTI
+%% Basato sulla classe ufficiale supsistudent.cls
+%% oneside = stampa/lettura singola facciata, senza pagine bianche di rilegatura
+\documentclass[oneside]{supsistudent}
 
+% Pacchetti aggiuntivi e configurazioni custom
 \input{preamble}
+
+% Acronimi
 \input{glossary}
 
+% Bibliografia
 \addbibresource{bibliography.bib}
 
-\title{\textbf{Battery GEIS MLOps Platform}\\[0.3cm]
-       \large Una pipeline MLOps end-to-end per la spettroscopia di impedenza
-       elettrochimica galvanostatica su celle Litio-Ione}
-\author{Davide Corso \and Marco Soldani}
-\date{Anno Accademico 2025--2026}
+% --- Helper: capitolo non numerato ma presente nell'indice ----------------
+\newcommand{\problemchapter}[1]{%
+  \chapter*{#1}%
+  \addcontentsline{toc}{chapter}{#1}%
+  \markboth{#1}{#1}%
+}
+
+% Profondità di numerazione e indice
+\setcounter{secnumdepth}{3}
+\setcounter{tocdepth}{2}
+
+% --- Metadati copertina SUPSI --------------------------------------------
+\titolo{Battery GEIS MLOps Platform}
+\studente{Davide Corso \vspace{1em}\\ Marco Soldani}
+\relatore{Prof.~Loris Cannelli}
+\correlatore{\strut}                      % campo opzionale, invisibile ma con baseline
+\committente{\strut}                      % campo opzionale, invisibile ma con baseline
+\corso{Bachelor in Ingegneria Informatica TP}            % TODO: sostituire con il codice/nome ufficiale del corso
+\modulo{Progetto di Semestre}             % TODO: sostituire con codice/nome del modulo se richiesto
+\anno{2025--2026}
+\date{2 maggio 2026}
 
 \begin{document}
 
-% ── Pagina del titolo ──────────────────────────────────────────────────────
-\begin{titlepage}
-  \centering
-  \vspace*{1cm}
-  {\Large SUPSI -- Scuola Universitaria Professionale della Svizzera Italiana\\
-   Dipartimento Tecnologie Innovative (DTI) \par}
-  \vspace{0.5cm}
-  {\large Progetto di Semestre \par}
-  \vspace{0.3cm}
-  {\large Relatore: Prof.~Loris Cannelli\par}
-  \vspace{0.2cm}
-  {\large \emph{In collaborazione con Politecnico di Milano} \par}
-  \vfill
-  {\Huge\bfseries Battery GEIS MLOps Platform\par}
-  \vspace{0.7cm}
-  {\Large\itshape Una pipeline MLOps end-to-end per la spettroscopia di
-   impedenza elettrochimica galvanostatica su celle Litio-Ione\par}
-  \vfill
-  {\Large \textbf{Davide Corso} \quad\&\quad \textbf{Marco Soldani}\par}
-  \vspace{0.5cm}
-  {\large Anno Accademico 2025--2026\par}
-  \vspace{0.3cm}
-  {\large 28 aprile 2026\par}
-  \vfill
-\end{titlepage}
-
-% ── Front matter ────────────────────────────────────────────────────────────
+% Copertina
+\pagenumbering{alph}
+\maketitle
+% --- Front matter ---------------------------------------------------------
+\frontmatter
 \pagenumbering{roman}
+\onehalfspacing
+
 \input{chapters/00_abstract}
 \tableofcontents
+\listoffigures
+\listoftables
 
-\cleardoublepage
+% --- Main matter ----------------------------------------------------------
+\mainmatter
 \pagenumbering{arabic}
+\setcounter{page}{1}
 
-% ── Capitoli ────────────────────────────────────────────────────────────────
+% Sicurezza extra: se qualche pacchetto chiamasse \cleardoublepage,
+% in oneside non deve comunque inserire pagine bianche.
+\let\cleardoublepage\clearpage
+
+\input{chapters/00b_progetto_assegnato}
 \input{chapters/01_introduction}
 \input{chapters/02_background}
 \input{chapters/03_dataset}
@@ -61,12 +72,11 @@
 \input{chapters/12_conclusions}
 \input{chapters/13_conclusioni}
 
-% ── Bibliografia ────────────────────────────────────────────────────────────
+% --- Bibliografia ---------------------------------------------------------
 \printbibliography[heading=bibintoc, title={Bibliografia}]
 
-% ── Acronimi ────────────────────────────────────────────────────────────────
+% --- Acronimi -------------------------------------------------------------
 \glsaddall
-% Versione compatta: niente numeri di pagina, lista a due colonne stretta.
 \renewcommand*{\glossaryentrynumbers}[1]{}
 \setglossarystyle{long}
 \setlength{\glsdescwidth}{0.78\linewidth}

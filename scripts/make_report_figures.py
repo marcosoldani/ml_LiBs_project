@@ -52,7 +52,7 @@ def fig_dataset_nyquist(df: pd.DataFrame) -> None:
     for i, t in enumerate(temps):
         rows = sub[sub["Temperature"] == t].sort_values("Frequency", ascending=False)
         ax.plot(
-            rows["Z_real"], -rows["Z_imag"],
+            rows["Z_real"], rows["Z_imag"],
             "-", marker="o", markersize=2.5, linewidth=1,
             color=cmap(i / max(len(temps) - 1, 1)),
             label=f"{t}°C",
@@ -96,9 +96,9 @@ def fig_task1(df: pd.DataFrame) -> None:
     fig, axes = plt.subplots(1, len(socs), figsize=(2.6 * len(socs), 3.3), sharey=True)
     for ax, soc in zip(axes, socs, strict=True):
         rows = df_test[df_test["SOC"] == soc].sort_values("Frequency", ascending=False)
-        ax.plot(rows["Z_real"], -rows["Z_imag"], "o-",
+        ax.plot(rows["Z_real"], rows["Z_imag"], "o-",
                 color="#222", label="Vero", markersize=2.5, linewidth=1)
-        ax.plot(rows["Z_real_pred"], -rows["Z_imag_pred"], "x--",
+        ax.plot(rows["Z_real_pred"], rows["Z_imag_pred"], "x--",
                 color="#d62728", label="Predetto", markersize=4, linewidth=1)
         ax.set_title(f"SOC = {soc}")
         ax.set_xlabel(r"$\mathrm{Re}(Z)$ [m$\Omega$]")
@@ -150,7 +150,7 @@ def fig_task2(df: pd.DataFrame) -> None:
         sub = df_test.loc[mask].sort_values("Frequency", ascending=False)
         pred_temp = best_pred[mask]
         re_z = sub["Z_real"].values
-        im_z = -sub["Z_imag"].values
+        im_z = sub["Z_imag"].values
         for cls, label, color in zip([0, 1], ["Young", "Old"], ["#1b6cf5", "#d62728"], strict=True):
             m = pred_temp == cls
             if m.any():
@@ -212,9 +212,9 @@ def fig_task3(df: pd.DataFrame) -> None:
             ax = axes[i, j]
             rows = df_test[(df_test["Temperature"] == t) & (df_test["SOC"] == soc)] \
                 .sort_values("Frequency", ascending=False)
-            ax.plot(rows["Z_real"], -rows["Z_imag"], "o-",
+            ax.plot(rows["Z_real"], rows["Z_imag"], "o-",
                     color="#222", label="Vero", markersize=2.5, linewidth=1)
-            ax.plot(rows["Z_real_pred"], -rows["Z_imag_pred"], "x--",
+            ax.plot(rows["Z_real_pred"], rows["Z_imag_pred"], "x--",
                     color="#d62728", label="Predetto", markersize=4, linewidth=1)
             ax.set_title(f"T={t}°C, SOC={soc}")
             ax.grid(alpha=0.3)
@@ -239,7 +239,7 @@ def fig_dataset_aging_evolution(df: pd.DataFrame) -> None:
     for a in sorted(sub["Aging"].unique()):
         rows = sub[sub["Aging"] == a].sort_values("Frequency", ascending=False)
         ax.plot(
-            rows["Z_real"], -rows["Z_imag"], "-o",
+            rows["Z_real"], rows["Z_imag"], "-o",
             color=cmap(a / 4), markersize=2.5, linewidth=1.0,
             label=f"Aging {a}",
         )
@@ -420,6 +420,132 @@ def fig_task1_residuals_per_soc(df: pd.DataFrame) -> None:
     plt.close(fig)
 
 
+def _selected_soc_classification(df: pd.DataFrame, soc: int = 3, seed: int = 42):
+    """Replica della pipeline del notebook 2: SOC fisso, StratifiedGroupKFold 80/20.
+
+    Restituisce y_test, predictions, probabilities, best_model_name, accuracies.
+    Necessaria per ROC e confusion matrix, che non sono coperte da
+    `run_classification` (quella esclude un'intera coppia (Aging, SOC) e ha
+    quindi una sola classe nel test set).
+    """
+    import seaborn as sns  # noqa: F401  # used by callers
+    from sklearn.ensemble import (
+        ExtraTreesClassifier,
+        GradientBoostingClassifier,
+        RandomForestClassifier,
+    )
+    from sklearn.linear_model import LogisticRegression
+    from sklearn.metrics import accuracy_score
+    from sklearn.model_selection import StratifiedGroupKFold
+    from sklearn.neighbors import KNeighborsClassifier
+    from sklearn.preprocessing import StandardScaler
+    from sklearn.svm import SVC
+
+    df = df.copy()
+    df["Age_class"] = (df["Aging"] >= 3).astype(int)
+    df_soc = df[df["SOC"] == soc].copy()
+
+    X_all = pd.DataFrame({
+        "Temperature": df_soc["Temperature"].values,
+        "Frequency": df_soc["Frequency"].values,
+        "log_Freq": np.log10(df_soc["Frequency"].values),
+        "Z_real": df_soc["Z_real"].values,
+        "Z_imag": df_soc["Z_imag"].values,
+        "Z_magnitude": np.sqrt(df_soc["Z_real"].values ** 2 + df_soc["Z_imag"].values ** 2),
+        "Z_phase": np.arctan2(df_soc["Z_imag"].values, df_soc["Z_real"].values),
+        "inv_Temp": 1.0 / (df_soc["Temperature"].values + 273.15),
+        "Z_real_x_Temp": df_soc["Z_real"].values * df_soc["Temperature"].values,
+        "sqrt_Freq": np.sqrt(df_soc["Frequency"].values),
+    })
+    y_all = df_soc["Age_class"].values
+    groups_all = (
+        df_soc["Aging"].astype(str) + "_" + df_soc["Temperature"].astype(str)
+    ).values
+
+    sgkf = StratifiedGroupKFold(n_splits=5, shuffle=True, random_state=seed)
+    train_idx, test_idx = next(sgkf.split(X_all, y_all, groups=groups_all))
+    X_train_raw = X_all.iloc[train_idx]
+    X_test_raw = X_all.iloc[test_idx]
+    y_train = y_all[train_idx]
+    y_test = y_all[test_idx]
+
+    scaler = StandardScaler()
+    X_train = scaler.fit_transform(X_train_raw)
+    X_test = scaler.transform(X_test_raw)
+
+    models = {
+        "Logistic Regression": LogisticRegression(max_iter=1000, random_state=seed),
+        "Random Forest": RandomForestClassifier(n_estimators=100, max_depth=15, random_state=seed, n_jobs=-1),
+        "Gradient Boosting": GradientBoostingClassifier(n_estimators=100, max_depth=5, learning_rate=0.1, random_state=seed),
+        "Extra Trees": ExtraTreesClassifier(n_estimators=100, max_depth=15, random_state=seed, n_jobs=-1),
+        "K-Nearest Neighbors": KNeighborsClassifier(n_neighbors=10, weights="distance"),
+        "SVM (RBF)": SVC(kernel="rbf", C=10.0, probability=True, random_state=seed),
+    }
+    predictions: dict[str, np.ndarray] = {}
+    probabilities: dict[str, np.ndarray] = {}
+    accuracies: dict[str, float] = {}
+    for name, model in models.items():
+        model.fit(X_train, y_train)
+        predictions[name] = model.predict(X_test)
+        if hasattr(model, "predict_proba"):
+            probabilities[name] = model.predict_proba(X_test)[:, 1]
+        else:
+            probabilities[name] = model.decision_function(X_test)
+        accuracies[name] = accuracy_score(y_test, predictions[name])
+
+    best = max(accuracies, key=accuracies.get)
+    return y_test, predictions, probabilities, best, accuracies
+
+
+def fig_task2_confusion(df: pd.DataFrame) -> None:
+    """Confusion matrix (assoluta + normalizzata) sul fold di test SOC=3."""
+    import seaborn as sns
+    from sklearn.metrics import confusion_matrix
+
+    y_test, predictions, _probs, best, _acc = _selected_soc_classification(df, soc=3)
+    cm = confusion_matrix(y_test, predictions[best])
+    cm_norm = cm.astype("float") / cm.sum(axis=1)[:, np.newaxis]
+
+    class_names = ["Young", "Old"]
+    fig, axes = plt.subplots(1, 2, figsize=(11.0, 4.2))
+    sns.heatmap(cm, annot=True, fmt="d", cmap="Blues", ax=axes[0],
+                xticklabels=class_names, yticklabels=class_names, cbar=False)
+    axes[0].set_xlabel("Predicted")
+    axes[0].set_ylabel("Actual")
+    axes[0].set_title(f"Confusion matrix — {best} (SOC=3)")
+
+    sns.heatmap(cm_norm, annot=True, fmt=".2%", cmap="Blues", ax=axes[1],
+                xticklabels=class_names, yticklabels=class_names, cbar=False)
+    axes[1].set_xlabel("Predicted")
+    axes[1].set_ylabel("Actual")
+    axes[1].set_title("Confusion matrix (normalized)")
+
+    fig.savefig(OUT / "task2_confusion.pdf")
+    plt.close(fig)
+
+
+def fig_task2_roc(df: pd.DataFrame) -> None:
+    """ROC curves di tutti i 6 modelli sul fold di test SOC=3."""
+    from sklearn.metrics import roc_auc_score, roc_curve
+
+    y_test, _preds, probabilities, _best, _acc = _selected_soc_classification(df, soc=3)
+    fig, ax = plt.subplots(figsize=(6.4, 4.4))
+    for name, proba in probabilities.items():
+        fpr, tpr, _ = roc_curve(y_test, proba)
+        auc = roc_auc_score(y_test, proba)
+        ax.plot(fpr, tpr, linewidth=1.6, label=f"{name} (AUC={auc:.3f})")
+    ax.plot([0, 1], [0, 1], "k--", alpha=0.4, linewidth=1, label="Random")
+    ax.set_xlabel("False Positive Rate")
+    ax.set_ylabel("True Positive Rate")
+    ax.set_title("Task 2 — ROC curves (SOC=3)")
+    ax.set_xlim(-0.01, 1.01)
+    ax.set_ylim(-0.01, 1.01)
+    ax.legend(loc="lower right", fontsize=7)
+    ax.grid(alpha=0.3)
+    fig.savefig(OUT / "task2_roc.pdf")
+    plt.close(fig)
+
+
 def main() -> None:
     df = load_dataset()
     print("Generating dataset figures...")
@@ -434,6 +560,8 @@ def main() -> None:
     fig_task2(df)
     fig_task2_feature_importance(df)
     fig_task2_cross_pair_heatmap(df)
+    fig_task2_confusion(df)
+    fig_task2_roc(df)
     print("Generating Task 3 figures...")
     fig_task3(df)
     fig_task3_metrics_bar(df)

@@ -199,7 +199,7 @@ def get_dataset_curves(aging: int) -> dict[str, Any]:
                 "temperature": float(temp),
                 "color": TEMP_COLORS.get(float(temp), "#444"),
                 "z_real": rows["Z_real"].tolist(),
-                "z_imag_neg": (-rows["Z_imag"]).tolist(),
+                "z_imag_neg": rows["Z_imag"].tolist(),
                 "soc": rows["SOC"].astype(int).tolist(),
                 "frequency": rows["Frequency"].tolist(),
             }
@@ -253,7 +253,7 @@ def get_aging_evolution(soc: int, excluded_aging: int) -> dict[str, Any]:
                     "color": AGING_COLORS.get(int(aging), "#333"),
                     "dashed": int(aging) == int(excluded_aging),
                     "z_real": rows["Z_real"].tolist(),
-                    "z_imag_neg": (-rows["Z_imag"]).tolist(),
+                    "z_imag_neg": rows["Z_imag"].tolist(),
                 }
             )
         panels.append({"temperature": temp, "traces": traces})
@@ -273,9 +273,9 @@ def _task1_payload(result: Any, focus_soc: int | None = None) -> dict[str, Any]:
             "soc": soc,
             "frequency": rows["Frequency"].tolist(),
             "z_real_actual": rows["Z_real"].tolist(),
-            "z_imag_neg_actual": (-rows["Z_imag"]).tolist(),
+            "z_imag_neg_actual": rows["Z_imag"].tolist(),
             "z_real_pred": result.best_predictions[idx, 0].tolist(),
-            "z_imag_neg_pred": (-result.best_predictions[idx, 1]).tolist(),
+            "z_imag_neg_pred": result.best_predictions[idx, 1].tolist(),
         }
 
     residuals = []
@@ -333,7 +333,7 @@ def _task2_payload(result: Any) -> dict[str, Any]:
                     "label": label,
                     "color": color,
                     "z_real": sub.loc[m, "Z_real"].tolist(),
-                    "z_imag_neg": (-sub.loc[m, "Z_imag"]).tolist(),
+                    "z_imag_neg": sub.loc[m, "Z_imag"].tolist(),
                     "frequency": sub.loc[m, "Frequency"].tolist(),
                 }
             )
@@ -401,9 +401,9 @@ def _task3_payload(result: Any) -> dict[str, Any]:
                     "soc": int(soc),
                     "color": TEMP_COLORS.get(float(temp), "#555"),
                     "z_real_actual": sub["Z_real"].tolist(),
-                    "z_imag_neg_actual": (-sub["Z_imag"]).tolist(),
+                    "z_imag_neg_actual": sub["Z_imag"].tolist(),
                     "z_real_pred": sub["Z_real_pred"].tolist(),
-                    "z_imag_neg_pred": (-sub["Z_imag_pred"]).tolist(),
+                    "z_imag_neg_pred": sub["Z_imag_pred"].tolist(),
                 }
             )
         grid.append({"temperature": float(temp), "cells": row_panels})

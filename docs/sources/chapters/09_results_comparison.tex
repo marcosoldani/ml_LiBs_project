@@ -63,13 +63,9 @@ Empiricamente, il \emph{ranking} di difficoltà è:
 
 \subsection{La giusta CV vale più del modello}
 
-In tutti e tre i task, la differenza fra usare una CV \emph{leakage-free}
-(\acrshort{logo} o \texttt{StratifiedGroupKFold}) e una CV row-wise vale
-più di una settimana di tuning di iperparametri. I numeri di
-\cref{tab:task1-benchmark,tab:task2-benchmark,tab:task3-benchmark} sono
-\emph{realistici} grazie alla scelta di splitter coerenti con il task.
+In tutti e tre i task, la differenza tra l’uso di una cross-validation leakage-free (\acrshort{logo} o \texttt{StratifiedGroupKFold}) e una cross-validation row-wise è determinante. I risultati riportati in \cref{tab:task1-benchmark,tab:task2-benchmark,tab:task3-benchmark} risultano infatti \emph{realistici} proprio grazie alla scelta di splitter coerenti con il task.
 
-\subsection{Tuning $\neq$ miglioramento}
+\subsection{Tuning \texorpdfstring{$\neq$}{!=} miglioramento}
 
 In tutti e tre i task il GridSearchCV \emph{non migliora} la baseline. È
 un risultato controintuitivo ma istruttivo: con dataset piccoli
@@ -91,8 +87,7 @@ direttamente la fisica:
         temperatura osservata nei dati.
 \end{itemize}
 
-Aggiungere feature più complesse (es.~modelli equivalenti di circuito
-fitati) avrebbe portato un guadagno marginale a fronte di un costo
+Aggiungere feature più complesse avrebbe portato un guadagno marginale a fronte di un costo
 significativo in interpretabilità.
 
 \section{Coerenza fra notebook e produzione}
