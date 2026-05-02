@@ -41,7 +41,7 @@ PI termico aggiornato, batch produttivo nuovo).
 
 Implementiamo due test complementari:
 
-\subsection{Kolmogorov--Smirnov (\acrshort{ks})}
+\subsection{Kolmogorov--Smirnov (\texorpdfstring{\acrshort{ks}}{KS})}
 
 È un test statistico non parametrico a due campioni che confronta le
 \emph{CDF empiriche} di reference e current:
@@ -56,7 +56,7 @@ default: $\alpha = 0.05$. Vantaggio: sensibile a \emph{qualunque}
 cambiamento di forma (anche bimodale, varianza, ecc.). Svantaggio:
 sensibile anche a piccole differenze quando $n$ è grande.
 
-\subsection{Population Stability Index (\acrshort{psi})}
+\subsection{Population Stability Index (\texorpdfstring{\acrshort{psi}}{PSI})}
 
 Misura quanto si è ``spostata la massa'' fra i bin. Si binnano i dati
 secondo i quantili della distribuzione di riferimento, poi:
@@ -80,9 +80,9 @@ diffusa anche per il monitoring ML:
 KS è bravo a vedere \emph{il cambio di forma} ma ha falsi negativi quando
 la distribuzione si trasla con la stessa forma. PSI è bravo a vedere
 \emph{spostamenti di massa} fra bin ma ha falsi negativi su distribuzioni
-multimodali quando una moda compensa l'altra. Combinandoli (drift se
-\emph{almeno uno dei due} fire) si riducono i falsi negativi.
+multimodali quando una moda compensa l'altra. Combinandoli (si considera drift se almeno uno dei due metodi lo segnala) si riducono i falsi negativi.
 
+\newpage
 \section{API di programmazione}
 
 Le funzioni esposte da \codefile{src/monitoring/drift.py}:
@@ -128,7 +128,7 @@ record per riga). I record sono leggibili in batch con
 \texttt{read\_predictions()} e ingeribili da \codefile{scripts/monitor.py}
 come distribuzione \emph{current} (\texttt{--current-format jsonl}).
 
-\section{Esposizione \acrshort{rest}}
+\section{Esposizione \texorpdfstring{\acrshort{rest}}{REST}}
 
 Il bridge FastAPI espone tre endpoint dedicati:
 \begin{itemize}

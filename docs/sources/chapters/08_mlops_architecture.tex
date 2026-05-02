@@ -1,4 +1,4 @@
-\chapter{Architettura \acrshort{mlops}}
+\chapter{Architettura \texorpdfstring{\acrshort{mlops}}{MLOps}}
 \label{chap:mlops}
 
 \paragraph{Riassunto del capitolo.} Mentre i tre task precedenti
@@ -13,7 +13,7 @@ detection (KS+PSI). Il fine è dimostrare che gli stessi modelli dei
 notebook possono essere serviti, monitorati e mantenuti come un
 prodotto reale.
 
-Questo capitolo è il cuore \emph{ingegneristico} del report: descrive
+Questo capitolo descrive
 l'architettura della piattaforma e raccoglie le scelte di
 implementazione che, prese insieme, ne fanno un sistema MLOps completo.
 Le aree coperte sono: riproducibilità, configurazione, logging,
@@ -44,6 +44,7 @@ quelli identificati da Sculley \emph{et al.}~\cite{sculley2015hidden}
   \end{tabularx}
 \end{table}
 
+\newpage
 \section{Layered design}
 
 L'architettura logica segue tre principi: \emph{stratificazione},
@@ -120,7 +121,8 @@ training; la stessa riga è facile da ingerire da uno strumento esterno
 ImportError}, rendendolo \emph{opzionale}. Quando installato,
 \texttt{track\_pipeline} apre un \emph{parent run} per task, e
 \texttt{log\_model\_run} apre un \emph{child run} per modello con i suoi
-parametri, le metriche e la durata. Per ciascun parent run logghiamo:
+parametri, le metriche e la durata.
+\\Per ciascun parent run logghiamo:
 \begin{itemize}
   \item SHA git corrente (best-effort);
   \item SHA-256 del CSV training (\emph{data version});

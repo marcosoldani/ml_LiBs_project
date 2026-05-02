@@ -41,7 +41,7 @@ ragionevole \textbf{evitare la misura} di una coppia (Aging,
 Temperatura) ogni 40, ovvero un risparmio del $\sim$2.5\,\% sul tempo
 di laboratorio per ogni cella caratterizzata, mantenendo l'errore di
 predizione su $\mathrm{Re}(Z)$ e $\mathrm{Im}(Z)$ ben dentro la
-dispersione fisiologica delle misure ($\sim$\SI{1}{\milli\ohm}). Per il
+dispersione fisiologica delle misure ($\sim$\SI{1}{\milliohm}). Per il
 Task 3 il risparmio potenziale è ancora più rilevante: predire un
 intero stadio di invecchiamento permette di saltare un'intera campagna
 di degrado accelerato, dell'ordine di decine di ore di laboratorio.
@@ -71,8 +71,7 @@ Le direzioni più promettenti, in ordine di priorità, sono:
 \begin{enumerate}[leftmargin=*]
   \item aggiungere \textbf{intervalli di confidenza bootstrap} alle
         metriche di benchmark, per rendere statisticamente difendibili
-        i confronti fra modelli (~30 righe di codice in
-        \codefile{src/evaluation/metrics.py});
+        i confronti fra modelli;
   \item chiudere il ciclo di \textbf{continual learning} legando i
         report di drift a un retraining automatico orchestrato;
   \item esplorare \textbf{modelli ibridi con prior fisico} (Arrhenius
@@ -80,10 +79,9 @@ Le direzioni più promettenti, in ordine di priorità, sono:
         affrontare l'estrapolazione oltre il dominio osservato;
   \item versionare il dataset con \textbf{DVC} e migrare l'experiment
         tracking su un backend MLflow remoto, per supportare
-        collaborazione fra più sviluppatori.
+        collaborazione fra più sviluppatori.\\
 \end{enumerate}
 
-In sintesi, il progetto ha consegnato i tre notebook richiesti e una
-piattaforma MLOps funzionante che li espone, traccia e monitora. I
-limiti riconosciuti nel \cref{chap:conclusions} sono noti e
-quantificati, e tracciano una roadmap operativa per il lavoro futuro.
+Le limitazioni discusse in \cref{chap:conclusions} sono state esplicitate e quantificate, delineando una roadmap chiara e concreta per gli sviluppi futuri.
+\\\\
+Si desidera infine ringraziare il docente per la disponibilità e il supporto forniti durante lo sviluppo del progetto.

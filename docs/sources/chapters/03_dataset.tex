@@ -30,11 +30,12 @@ GEIS.mat
 \end{lstlisting}
 
 Ogni matrice 3D contiene, per ciascuno dei 5 livelli di SOC, le triplette
-$(\text{Frequency [Hz]}, \text{Re(Z) [\(\Omega\)]}, \text{Im(Z) [\(\Omega\)]})$.
+$(\text{Frequency [Hz]},\newline \text{Re(Z) [\(\Omega\)]}, \text{Im(Z) [\(\Omega\)]})$.
 I valori grezzi sono in $\Omega$; noi moltiplichiamo per $10^3$ per
 ottenere milliohm, una scelta più leggibile per i plot di Nyquist su
 celle da pochi \milliohm{} di resistenza serie.
 
+\newpage
 \section{Pipeline di pulizia}
 
 La conversione è identica nel notebook
@@ -68,7 +69,7 @@ in \cref{tab:dataset-schema}.
     \texttt{SOC}          & int   & $\{0, 1, 2, 3, 4\}$ ($\approx$ 0\,\%, 25\,\%, 50\,\%, 75\,\%, 100\,\%) \\
     \texttt{Frequency}    & float & \si{\hertz}, $\sim$49 valori log-spaziati in $[0.099, 10\,002]$ \\
     \texttt{Z\_real}      & float & $\mathrm{Re}(Z)$ in \milliohm{} \\
-    \texttt{Z\_imag}      & float & $\mathrm{Im}(Z)$ in \milliohm{} \\
+    \texttt{Z\_imag}      & float & $-\mathrm{Im}(Z)$ in \milliohm{} (convenzione \acrshort{eis}) \\
     \bottomrule
   \end{tabular}
 \end{table}
@@ -87,6 +88,7 @@ Quattro invarianti vengono verificati dai test in
         $[0.099, 10\,002]\,\si{\hertz}$.
 \end{enumerate}
 
+\newpage
 \section{Esplorazione preliminare}
 
 \begin{figure}[htbp]
@@ -139,6 +141,6 @@ prossimo capitolo:
 
 \codefile{src/data/loader.py::load\_dataset} è decorato con
 \texttt{@functools.lru\_cache(maxsize=1)}: il CSV viene letto una sola
-volta per processo. Il loader ordina sempre per $(Aging, Temperature,
-SOC, Frequency)$ in modo che split successivi (anche complessi come il
+volta per processo. Il loader ordina sempre per (Aging, \newline Temperature, 
+SOC, Frequency) in modo che split successivi (anche complessi come il
 \acrshort{logo}) restituiscano indici stabili e riproducibili.

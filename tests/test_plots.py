@@ -82,7 +82,7 @@ def test_nyquist_by_soc_uses_negative_imaginary(mini_nyquist_df: pd.DataFrame) -
     fig = nyquist_by_soc(sub, title="Sign check")
     raw = sub.sort_values("Frequency", ascending=False)["Z_imag"].to_numpy()
     plotted = np.asarray(fig.data[0].y)
-    np.testing.assert_allclose(plotted, -raw)
+    np.testing.assert_allclose(plotted, raw)
 
 
 # ---------------------------------------------------------------------------
@@ -151,7 +151,7 @@ def test_nyquist_grid_uses_negative_imaginary(prediction_df: pd.DataFrame) -> No
     fig = nyquist_grid_40(sub, title="Grid sign check")
     first = sub[sub["SOC"] == 0].sort_values("Frequency", ascending=False)
     np.testing.assert_allclose(
-        np.asarray(fig.data[0].y), -first["Z_imag"].to_numpy()
+        np.asarray(fig.data[0].y), first["Z_imag"].to_numpy()
     )
 
 

@@ -88,7 +88,7 @@ classificati fra i ${\sim}392$ delle 8 curve in hold-out.
     \bottomrule
   \end{tabularx}
 \end{table}
-
+\newpage
 \section{Risultati del benchmark di default}
 
 Hold-out di default: $(a^\star = 4, s^\star = 3)$ -- una cella molto
@@ -159,12 +159,12 @@ appoggiarsi all'Aging come feature -- predice in base alla regione di
 training più vicina nello spazio dell'impedenza, sbagliando proprio dove
 le due classi cominciano a sovrapporsi. È un comportamento \emph{informativo}:
 indica al gestore di flotta dove investire più misure GEIS prima di
-fidarsi del classificatore. La \cref{fig:task2-cross-pair-heatmap}
+fidarsi del classificatore. \\La \cref{fig:task2-cross-pair-heatmap}
 visualizza la stessa informazione in forma di mappa di calore.
 
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=0.85\linewidth]{task2_cross_pair_heatmap.pdf}
+  \includegraphics[width=0.9\linewidth]{task2_cross_pair_heatmap.pdf}
   \caption{Heatmap dell'accuracy del modello migliore (per coppia) sui
   25 hold-out possibili $(Aging, SOC)$. Verde = problema facile
   (estremi del dominio, $Aging \in \{0, 4\}$); rosso = problema vicino
@@ -173,13 +173,14 @@ visualizza la stessa informazione in forma di mappa di calore.
   \label{fig:task2-cross-pair-heatmap}
 \end{figure}
 
+\newpage
 \section{Analisi qualitativa}
 
 \subsection{Accuracy per temperatura}
 
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=0.85\linewidth]{task2_per_temp_accuracy.pdf}
+  \includegraphics[width=0.9\linewidth]{task2_per_temp_accuracy.pdf}
   \caption{Accuracy per ognuna delle 8 temperature del hold-out
   $(Aging = 4, SOC = 3)$. Sull'estremo del dominio l'SVM-RBF non sbaglia
   un solo punto a nessuna temperatura -- il segnale è netto.}
@@ -194,6 +195,7 @@ fisica: a bassa temperatura la resistenza ohmica $R_s$ aumenta, mimando
 una cella più invecchiata; il classificatore non riesce a distinguere
 l'effetto termico da quello di aging vero.
 
+\newpage
 \subsection{Predizione sulle 8 curve di Nyquist del hold-out}
 
 \begin{figure}[htbp]
@@ -207,12 +209,15 @@ l'effetto termico da quello di aging vero.
   \label{fig:task2-grid}
 \end{figure}
 
+\newpage
+
 \subsection{Feature importance}
 
 L'SVM-RBF non espone \texttt{feature\_importances\_} (è un modello kernel,
 non basato su alberi); come proxy interpretabile usiamo un Random Forest
 addestrato sullo stesso split di training, riportato come bar chart sia
-nella UI sia in \cref{fig:task2-fi}. Le tre feature più informative
+nella UI sia in \cref{fig:task2-fi}.
+\\Le tre feature più informative
 sono nell'ordine:
 \begin{enumerate}[leftmargin=*]
   \item \texttt{Z\_real\_x\_Temp} (interazione resistiva-termica),

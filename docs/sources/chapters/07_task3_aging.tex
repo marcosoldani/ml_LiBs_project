@@ -44,7 +44,7 @@ non viene mai osservato.
 
 \section{Modelli candidati}
 
-Task 3 utilizza esattamente la stessa funzione factory di Task 1
+Task 3 utilizza esattamente la stessa funzione factory di Task 1 \\
 (\codefile{src/models/registry.py::regression\_models}), perché lo
 spazio delle feature e il target sono identici. Gli iperparametri di
 default sono quelli della~\cref{tab:task1-models}: Ridge $\alpha=1$,
@@ -119,7 +119,7 @@ $0.9872$) e degrada al bordo superiore (\SI{47.5}{\celsius}:
 $0.9566$): è un effetto di \emph{boundary} atteso, oltre il bordo non
 ci sono campioni che possano sostenere l'interpolazione e KNN ricade su
 vicini più ``lontani'' nello spazio scalato. La \acrshort{mae} resta
-sempre sotto $\SI{0.072}{\milli\ohm}$ in modulo.
+sempre sotto $\SI{0.072}{\milliohm}$ in modulo.
 
 \section{Hyperparameter tuning}
 
@@ -144,11 +144,12 @@ e una sola valutazione finale, senza intervallo di confidenza
 calcolato per bootstrap (cfr.~\cref{sec:bootstrap}) non possiamo
 concludere che il tuning peggiori. Manteniamo la baseline.
 
+\newpage
 \section{Visualizzazioni}
 
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=0.78\linewidth]{task3_metrics_bar.pdf}
+  \includegraphics[width=0.9\linewidth]{task3_metrics_bar.pdf}
   \caption{$R^{2}$ sul fold di test per i cinque modelli candidati.
   KNN distanza-pesato è il solo a interpolare correttamente; i modelli
   lineari saturano sotto $0.73$.}
@@ -157,7 +158,7 @@ concludere che il tuning peggiori. Manteniamo la baseline.
 
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=0.80\linewidth]{task3_per_temp.pdf}
+  \includegraphics[width=0.90\linewidth]{task3_per_temp.pdf}
   \caption{$R^{2}$ e MAE per livello di temperatura del modello KNN
   vincitore. La performance degrada al bordo superiore della finestra
   termica (\SI{47.5}{\celsius}, $R^{2} = 0.957$) per effetto di
@@ -180,7 +181,7 @@ concludere che il tuning peggiori. Manteniamo la baseline.
   \includegraphics[width=0.78\linewidth]{task3_error_distribution.pdf}
   \caption{Istogramma degli errori assoluti
   $\sqrt{\Delta\mathrm{Re}^2 + \Delta\mathrm{Im}^2}$ sul fold di test.
-  Il 95\textsuperscript{o} percentile cade sotto i \SI{0.2}{\milli\ohm},
+  Il 95\textsuperscript{o} percentile cade sotto i \SI{0.2}{\milliohm},
   ben dentro la dispersione fisiologica delle misure.}
   \label{fig:task3-error}
 \end{figure}

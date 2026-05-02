@@ -1,17 +1,20 @@
-% ── Encoding & lingua ──────────────────────────────────────────────────────
-\usepackage[utf8]{inputenc}
-\usepackage[T1]{fontenc}
-\usepackage[italian,english]{babel}
+% ============================================================================
+% Pacchetti aggiuntivi compatibili con la classe supsistudent.
+% NON ricaricare: babel, geometry, inputenc, fontenc, helvet, setspace,
+% graphicx, fancyhdr, titlesec, amsmath, varioref, lastpage, eso-pic,
+% changepage  (sono già caricati da supsistudent.cls).
+% ============================================================================
 
-% ── Layout ─────────────────────────────────────────────────────────────────
-\usepackage[a4paper,top=2.7cm,bottom=2.7cm,left=2.6cm,right=2.6cm]{geometry}
-\usepackage{setspace}
-\onehalfspacing
+% ── Tipografia ─────────────────────────────────────────────────────────────
 \usepackage{microtype}
-\usepackage{parskip}
 
-% ── Matematica & simboli ───────────────────────────────────────────────────
-\usepackage{amsmath, amssymb, mathtools}
+% Tolleranza moderata per spezzare righe difficili senza generare
+% troppi "Underfull". Aiuta soprattutto su URL e identificatori lunghi.
+\setlength{\emergencystretch}{1.5em}
+
+% ── Matematica & simboli (amsmath già caricato dalla classe) ───────────────
+\usepackage{amssymb}
+\usepackage{mathtools}
 \usepackage{siunitx}
 \sisetup{
   detect-all,
@@ -19,7 +22,7 @@
   output-decimal-marker={.}
 }
 
-% ── Tabelle, liste, codice ─────────────────────────────────────────────────
+% ── Tabelle, liste ─────────────────────────────────────────────────────────
 \usepackage{booktabs}
 \usepackage{tabularx}
 \usepackage{longtable}
@@ -27,6 +30,7 @@
 \usepackage{enumitem}
 \setlist{topsep=2pt, itemsep=2pt, parsep=2pt}
 
+% ── Colori ─────────────────────────────────────────────────────────────────
 \usepackage[table]{xcolor}
 \definecolor{accent}{HTML}{1F4E79}
 \definecolor{codebg}{HTML}{F4F6F8}
@@ -34,9 +38,10 @@
 \definecolor{codekw}{HTML}{8250DF}
 \definecolor{codecomment}{HTML}{6E7781}
 
+% ── Listing di codice ──────────────────────────────────────────────────────
 \usepackage{listings}
 
-% Custom lightweight YAML highlighter (listings has no built-in YAML).
+% YAML (listings non lo supporta nativamente)
 \lstdefinelanguage{YAML}{
   keywords={true, false, null},
   keywordstyle=\color{codekw}\bfseries,
@@ -49,7 +54,7 @@
     {-}{{{\color{codekw}{-}}}}{1},
 }
 
-% Custom lightweight JSON highlighter.
+% JSON
 \lstdefinelanguage{JSON}{
   keywords={true, false, null},
   keywordstyle=\color{codekw}\bfseries,
@@ -83,8 +88,7 @@
   tabsize=4,
 }
 
-% ── Figure ─────────────────────────────────────────────────────────────────
-\usepackage{graphicx}
+% ── Figure (graphicx già caricato dalla classe) ────────────────────────────
 \graphicspath{{figures/}}
 \usepackage{subcaption}
 \usepackage{float}
@@ -115,33 +119,17 @@
 }
 \usepackage[noabbrev,capitalise,italian]{cleveref}
 
-% ── Bibliografia ───────────────────────────────────────────────────────────
+% ── Bibliografia (biblatex + biber) ────────────────────────────────────────
 \usepackage{csquotes}
 \usepackage[backend=biber,style=numeric,sorting=none,maxbibnames=99,minbibnames=99]{biblatex}
 
-% ── Glossari ───────────────────────────────────────────────────────────────
+% ── Glossari / acronimi ────────────────────────────────────────────────────
 \usepackage[acronym,toc,nonumberlist,nopostdot,nogroupskip]{glossaries}
 \setglossarystyle{long}
 \makeglossaries
 
-% ── Header / footer ────────────────────────────────────────────────────────
-\usepackage{fancyhdr}
-\setlength{\headheight}{14pt}
-\pagestyle{fancy}
-\fancyhf{}
-\fancyhead[L]{\nouppercase\leftmark}
-\fancyhead[R]{\thepage}
-\renewcommand{\headrulewidth}{0.4pt}
-
-% ── Numeri di capitolo più compatti ────────────────────────────────────────
-\usepackage{titlesec}
-\titleformat{\chapter}[hang]
-  {\Huge\bfseries\color{accent}}
-  {\thechapter\hspace{12pt}}
-  {0pt}
-  {}
-\titlespacing*{\chapter}{0pt}{-30pt}{20pt}
-
 % ── Comandi custom ─────────────────────────────────────────────────────────
-\newcommand{\milliohm}{\si{\milli\ohm}}
+% Forzato in math mode: \Omega in Helvetica (font sans default SUPSI) non
+% esiste e renderizza come tofu box. In math mode usa cm-math che ce l'ha.
+\newcommand{\milliohm}{\ensuremath{\si{\milli\ohm}}}
 \newcommand{\codefile}[1]{\texttt{\small#1}}

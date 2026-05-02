@@ -41,7 +41,7 @@ def nyquist_by_soc(
         fig.add_trace(
             go.Scatter(
                 x=sub["Z_real"],
-                y=-sub["Z_imag"],
+                y=sub["Z_imag"],
                 mode="lines+markers" if line else "markers",
                 name=SOC_LABELS.get(int(soc), f"SOC {soc}"),
                 marker={
@@ -87,7 +87,7 @@ def actual_vs_predicted_nyquist(
         fig.add_trace(
             go.Scatter(
                 x=z_real_true,
-                y=-z_imag_true,
+                y=z_imag_true,
                 mode="lines+markers",
                 name=f"SOC {soc} — actual",
                 legendgroup=f"soc-{soc}",
@@ -98,7 +98,7 @@ def actual_vs_predicted_nyquist(
         fig.add_trace(
             go.Scatter(
                 x=z_real_pred,
-                y=-z_imag_pred,
+                y=z_imag_pred,
                 mode="lines+markers",
                 name=f"SOC {soc} — predicted",
                 legendgroup=f"soc-{soc}",
@@ -172,7 +172,7 @@ def nyquist_grid_40(df_test: pd.DataFrame, title: str) -> go.Figure:
             fig.add_trace(
                 go.Scatter(
                     x=sub["Z_real"],
-                    y=-sub["Z_imag"],
+                    y=sub["Z_imag"],
                     mode="lines+markers",
                     name="actual",
                     line={"color": color, "width": 2},
@@ -185,7 +185,7 @@ def nyquist_grid_40(df_test: pd.DataFrame, title: str) -> go.Figure:
             fig.add_trace(
                 go.Scatter(
                     x=sub["Z_real_pred"],
-                    y=-sub["Z_imag_pred"],
+                    y=sub["Z_imag_pred"],
                     mode="lines+markers",
                     name="pred",
                     line={"color": "black", "dash": "dash", "width": 1.5},
@@ -216,7 +216,7 @@ def nyquist_classification_map(df: pd.DataFrame, y_pred: np.ndarray) -> go.Figur
         fig.add_trace(
             go.Scatter(
                 x=df.loc[mask, "Z_real"],
-                y=-df.loc[mask, "Z_imag"],
+                y=df.loc[mask, "Z_imag"],
                 mode="markers",
                 name=f"Pred: {label}",
                 marker={"color": color, "size": 5, "opacity": 0.55},
@@ -316,7 +316,7 @@ def nyquist_aging_evolution(df: pd.DataFrame, soc: int, excluded_aging: int) -> 
             fig.add_trace(
                 go.Scatter(
                     x=sub["Z_real"],
-                    y=-sub["Z_imag"],
+                    y=sub["Z_imag"],
                     mode="lines+markers",
                     name=AGING_LABELS.get(int(aging), f"Aging {aging}"),
                     legendgroup=str(aging),

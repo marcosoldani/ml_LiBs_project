@@ -1,0 +1,69 @@
+\problemchapter{Progetto assegnato}
+
+\section*{Contesto}
+
+Le batterie agli ioni di litio sono la tecnologia di accumulo dominante
+per veicoli elettrici e sistemi stazionari, ma il loro stato di salute
+e di carica non è osservabile direttamente: va inferito da misure
+indirette. Fra queste, la \emph{Galvanostatic Electrochemical Impedance
+Spectroscopy} (\acrshort{geis}) è una delle più informative, perché la
+curva di Nyquist dell'impedenza complessa a diverse frequenze contiene
+firme distintive dei fenomeni elettrochimici interni alla cella.
+
+Il progetto si inserisce nella linea di ricerca avviata dal gruppo del
+Politecnico di Milano (\textit{THERMINIC 2025}) sulla
+caratterizzazione \acrshort{geis} di celle pouch
+\acrshort{licoo2}/grafite, in collaborazione con il quale è stato messo
+a disposizione un dataset sperimentale di circa 200 curve di Nyquist
+coprenti 5 livelli di invecchiamento (\texttt{Aging}), 5 stati di carica
+(\texttt{SOC}) e 8 temperature.
+
+\section*{Obiettivo}
+
+Sviluppare e confrontare modelli di Machine Learning su tre task
+complementari di interpretazione della curva di Nyquist, ciascuno
+corrispondente a una diversa domanda predittiva di interesse
+elettrochimico. Per ciascun task, il deliverable atteso è un
+\textbf{notebook Jupyter} che documenti l'analisi, addestri i modelli,
+ne valuti le prestazioni con una strategia di \emph{cross-validation}
+coerente con il task e ne discuta i risultati.
+
+\section*{Compiti}
+
+Il lavoro è articolato in tre task indipendenti.
+
+\paragraph{Task 1 --- Ricostruzione \emph{Leave-One-Out} di una curva
+di Nyquist.}
+Dato un sottoinsieme di curve di Nyquist disponibili, predire la curva
+mancante \(\bigl(Z_{\text{real}}(\omega), Z_{\text{imag}}(\omega)\bigr)\)
+completa per la coppia \((\textit{Aging}, \textit{Temperature})\)
+esclusa. La validazione segue lo schema \emph{Leave-One-Group-Out} sui
+gruppi \((\textit{Aging}, \textit{Temperature})\). Modelli da
+confrontare: Ridge, Random Forest, Gradient Boosting, K-Nearest
+Neighbors, Bagging.
+
+\paragraph{Task 2 --- Classificazione \emph{Young vs Old}.}
+A partire dalle 8 curve di Nyquist di una coppia
+\((\textit{Aging}, \textit{SOC})\) tenuta interamente fuori dal
+training, classificare la coppia come ``giovane''
+(\texttt{Aging}~\(\le\)~2) o ``vecchia'' (\texttt{Aging}~\(>\)~2). La
+validazione utilizza un \emph{hold-out} dell'intera coppia. Modelli da
+confrontare: Random Forest, Gradient Boosting, \acrshort{svm} a kernel
+\acrshort{rbf}, oltre a baseline lineari e \acrshort{knn}.
+
+\paragraph{Task 3 --- Interpolazione di un livello di \texttt{Aging}.}
+Predire l'intero livello di invecchiamento mancante a partire dagli
+altri quattro livelli, mantenendo costanti \texttt{SOC} e
+\texttt{Temperature}. La validazione segue lo schema
+\emph{Leave-One-Group-Out} sul gruppo \texttt{Aging}. Modelli da
+confrontare: Ridge, Random Forest, Gradient Boosting, K-Nearest
+Neighbors, Bagging.
+
+\section*{Vincoli e note}
+
+Il progetto è svolto in coppia (Davide Corso, Marco Soldani) sotto la
+supervisione del Prof.~Loris Cannelli. La parte scientifica
+(generazione del dataset, modello fisico di riferimento) è opera del
+gruppo del Politecnico di Milano; il presente lavoro reimplementa e
+estende l'analisi originale dal punto di vista ingegneristico, senza
+sostituire il contributo scientifico di riferimento.
