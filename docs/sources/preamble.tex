@@ -1,0 +1,135 @@
+% ============================================================================
+% Pacchetti aggiuntivi compatibili con la classe supsistudent.
+% NON ricaricare: babel, geometry, inputenc, fontenc, helvet, setspace,
+% graphicx, fancyhdr, titlesec, amsmath, varioref, lastpage, eso-pic,
+% changepage  (sono già caricati da supsistudent.cls).
+% ============================================================================
+
+% ── Tipografia ─────────────────────────────────────────────────────────────
+\usepackage{microtype}
+
+% Tolleranza moderata per spezzare righe difficili senza generare
+% troppi "Underfull". Aiuta soprattutto su URL e identificatori lunghi.
+\setlength{\emergencystretch}{1.5em}
+
+% ── Matematica & simboli (amsmath già caricato dalla classe) ───────────────
+\usepackage{amssymb}
+\usepackage{mathtools}
+\usepackage{siunitx}
+\sisetup{
+  detect-all,
+  per-mode=symbol,
+  output-decimal-marker={.}
+}
+
+% ── Tabelle, liste ─────────────────────────────────────────────────────────
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{longtable}
+\usepackage{multirow}
+\usepackage{enumitem}
+\setlist{topsep=2pt, itemsep=2pt, parsep=2pt}
+
+% ── Colori ─────────────────────────────────────────────────────────────────
+\usepackage[table]{xcolor}
+\definecolor{accent}{HTML}{1F4E79}
+\definecolor{codebg}{HTML}{F4F6F8}
+\definecolor{codestring}{HTML}{1A7F37}
+\definecolor{codekw}{HTML}{8250DF}
+\definecolor{codecomment}{HTML}{6E7781}
+
+% ── Listing di codice ──────────────────────────────────────────────────────
+\usepackage{listings}
+
+% YAML (listings non lo supporta nativamente)
+\lstdefinelanguage{YAML}{
+  keywords={true, false, null},
+  keywordstyle=\color{codekw}\bfseries,
+  sensitive=true,
+  comment=[l]{\#},
+  morestring=[b]",
+  morestring=[b]',
+  literate=
+    {:}{{{\color{codekw}{:}}}}{1}
+    {-}{{{\color{codekw}{-}}}}{1},
+}
+
+% JSON
+\lstdefinelanguage{JSON}{
+  keywords={true, false, null},
+  keywordstyle=\color{codekw}\bfseries,
+  sensitive=false,
+  morestring=[b]",
+  literate=
+    {\{}{{{\color{codekw}\{}}}{1}
+    {\}}{{{\color{codekw}\}}}}{1}
+    {[}{{{\color{codekw}[}}}{1}
+    {]}{{{\color{codekw}]}}}{1}
+    {:}{{{\color{codekw}{:}}}}{1}
+    {,}{{{\color{codekw}{,}}}}{1},
+}
+
+\lstset{
+  basicstyle=\ttfamily\footnotesize,
+  backgroundcolor=\color{codebg},
+  frame=single,
+  rulecolor=\color{codebg},
+  framerule=0pt,
+  xleftmargin=8pt,
+  xrightmargin=8pt,
+  aboveskip=4pt,
+  belowskip=4pt,
+  showstringspaces=false,
+  breaklines=true,
+  keywordstyle=\color{codekw}\bfseries,
+  commentstyle=\color{codecomment}\itshape,
+  stringstyle=\color{codestring},
+  language=Python,
+  tabsize=4,
+}
+
+% ── Figure (graphicx già caricato dalla classe) ────────────────────────────
+\graphicspath{{figures/}}
+\usepackage{subcaption}
+\usepackage{float}
+\usepackage{caption}
+\captionsetup{font=small, labelfont=bf}
+
+% ── Box pedagogici (Key Insight) ───────────────────────────────────────────
+\usepackage[most]{tcolorbox}
+\newtcolorbox{insight}[1][]{
+  enhanced,
+  colback=accent!5!white,
+  colframe=accent!75!black,
+  fonttitle=\bfseries,
+  title={Key Insight},
+  rounded corners,
+  drop fuzzy shadow=accent!20!gray,
+  boxrule=0.5pt,
+  #1
+}
+
+% ── Riferimenti & link ─────────────────────────────────────────────────────
+\usepackage[hidelinks]{hyperref}
+\hypersetup{
+  pdftitle={Battery GEIS MLOps Platform},
+  pdfauthor={Davide Corso, Marco Soldani},
+  pdfsubject={Progetto di Semestre — MLOps},
+  pdfkeywords={MLOps, EIS, GEIS, Lithium-Ion, Battery, Drift Detection, MLflow}
+}
+\usepackage[noabbrev,capitalise,italian]{cleveref}
+
+% ── Bibliografia (biblatex + biber) ────────────────────────────────────────
+\usepackage{csquotes}
+\usepackage[backend=biber,style=numeric,sorting=none,maxbibnames=99,minbibnames=99]{biblatex}
+
+% ── Glossari / acronimi ────────────────────────────────────────────────────
+\usepackage[acronym,toc,nonumberlist,nopostdot,nogroupskip]{glossaries}
+\setglossarystyle{long}
+\makeglossaries
+
+% ── Comandi custom ─────────────────────────────────────────────────────────
+% Forzato in math mode: \Omega in Helvetica (font sans default SUPSI) non
+% esiste e renderizza come tofu box. In math mode usa cm-math che ce l'ha.
+\newcommand{\milliohm}{\ensuremath{\si{\milli\ohm}}}
+\newcommand{\codefile}[1]{\texttt{\small#1}}

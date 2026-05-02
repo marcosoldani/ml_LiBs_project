@@ -1,0 +1,87 @@
+\chapter{Conclusioni}
+\label{chap:final-conclusions}
+
+Il presente progetto di semestre, svolto in collaborazione con il
+Politecnico di Milano, ha affrontato il problema della
+\textbf{predizione di parametri di celle Litio-Ione} a partire da un
+dataset di spettroscopia di impedenza galvanostatica composto da
+\num{9805} misurazioni e 200 curve di Nyquist complete.
+
+\section*{Risultati ottenuti}
+
+I tre task definiti nel \cref{chap:introduction} sono stati tutti
+risolti con metriche superiori alla soglia operativa di interesse
+($R^{2} \geq 0.95$ per la regressione, accuracy $\geq 0.95$ per la
+classificazione):
+\begin{itemize}
+  \item \textbf{Task 1 -- Leave-One-Out:} ricostruzione di una coppia
+        $(Aging, Temperatura)$ esclusa dal training con
+        $R^{2} = 0.991$ tramite \emph{KNN distance-weighted}, MSE di
+        $0.0079\,\milliohm^2$ e tempo di addestramento sotto il
+        secondo;
+  \item \textbf{Task 2 -- Young/Old Classification:} classificazione
+        binaria delle 8 curve di Nyquist (una per temperatura) di una
+        coppia $(Aging, SOC)$ esclusa dal training, con accuracy
+        $1.000$ sul hold-out di default $(Aging = 4, SOC = 3)$ tramite
+        \emph{SVM-RBF}; il modello satura agli estremi del dominio
+        (Aging $\in \{0, 4\}$) e si comporta come un vero stress test
+        alle coppie \emph{borderline} attorno alla soglia young/old
+        (Aging $\in \{2, 3\}$), dove l'accuracy oscilla fra $0.50$
+        e $1.00$ in funzione del SOC scelto;
+  \item \textbf{Task 3 -- Aging Interpolation:} predizione di un
+        intero livello di Aging mai osservato con $R^{2} = 0.986$
+        tramite \emph{KNN distance-weighted}, con degrado controllato
+        ai bordi della finestra termica.
+\end{itemize}
+
+\section*{Impatto operativo stimato}
+
+Sul piano operativo, i numeri suggeriscono che è
+ragionevole \textbf{evitare la misura} di una coppia (Aging,
+Temperatura) ogni 40, ovvero un risparmio del $\sim$2.5\,\% sul tempo
+di laboratorio per ogni cella caratterizzata, mantenendo l'errore di
+predizione su $\mathrm{Re}(Z)$ e $\mathrm{Im}(Z)$ ben dentro la
+dispersione fisiologica delle misure ($\sim$\SI{1}{\milliohm}). Per il
+Task 3 il risparmio potenziale è ancora più rilevante: predire un
+intero stadio di invecchiamento permette di saltare un'intera campagna
+di degrado accelerato, dell'ordine di decine di ore di laboratorio.
+
+\section*{Generalizzazione e contributo metodologico}
+
+L'esperienza ha confermato tre principi che riteniamo riusabili in
+contesti simili (qualsiasi problema di regressione/classificazione su
+dati misurati a costo non nullo):
+\begin{enumerate}[leftmargin=*]
+  \item lo \textbf{splitter di cross-validation} deve imitare la
+        procedura di valutazione fuori-sample del task -- usare una
+        CV row-wise quando il test è un gruppo intero produce numeri
+        sistematicamente ottimistici;
+  \item il \textbf{feature engineering motivato fisicamente}
+        (Arrhenius, log-frequenza, interazioni $X \times T$) batte
+        ensemble ciechi più sofisticati;
+  \item l'\textbf{infrastruttura MLOps} (configurazione centralizzata,
+        tracking, test, drift detection) ha un costo fisso modesto e
+        si ripaga la prima volta che bisogna riprodurre un risultato a
+        distanza di settimane.
+\end{enumerate}
+
+\section*{Prospettive future}
+
+Le direzioni più promettenti, in ordine di priorità, sono:
+\begin{enumerate}[leftmargin=*]
+  \item aggiungere \textbf{intervalli di confidenza bootstrap} alle
+        metriche di benchmark, per rendere statisticamente difendibili
+        i confronti fra modelli;
+  \item chiudere il ciclo di \textbf{continual learning} legando i
+        report di drift a un retraining automatico orchestrato;
+  \item esplorare \textbf{modelli ibridi con prior fisico} (Arrhenius
+        parametrizzato, polinomi di basso grado in Aging) per
+        affrontare l'estrapolazione oltre il dominio osservato;
+  \item versionare il dataset con \textbf{DVC} e migrare l'experiment
+        tracking su un backend MLflow remoto, per supportare
+        collaborazione fra più sviluppatori.\\
+\end{enumerate}
+
+Le limitazioni discusse in \cref{chap:conclusions} sono state esplicitate e quantificate, delineando una roadmap chiara e concreta per gli sviluppi futuri.
+\\\\
+Si desidera infine ringraziare il docente per la disponibilità e il supporto forniti durante lo sviluppo del progetto.

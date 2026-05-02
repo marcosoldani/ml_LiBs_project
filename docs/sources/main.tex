@@ -1,0 +1,85 @@
+%% Battery GEIS MLOps Platform — Progetto di Semestre SUPSI DTI
+%% Basato sulla classe ufficiale supsistudent.cls
+%% oneside = stampa/lettura singola facciata, senza pagine bianche di rilegatura
+\documentclass[oneside]{supsistudent}
+
+% Pacchetti aggiuntivi e configurazioni custom
+\input{preamble}
+
+% Acronimi
+\input{glossary}
+
+% Bibliografia
+\addbibresource{bibliography.bib}
+
+% --- Helper: capitolo non numerato ma presente nell'indice ----------------
+\newcommand{\problemchapter}[1]{%
+  \chapter*{#1}%
+  \addcontentsline{toc}{chapter}{#1}%
+  \markboth{#1}{#1}%
+}
+
+% Profondità di numerazione e indice
+\setcounter{secnumdepth}{3}
+\setcounter{tocdepth}{2}
+
+% --- Metadati copertina SUPSI --------------------------------------------
+\titolo{Battery GEIS MLOps Platform}
+\studente{Davide Corso \vspace{1em}\\ Marco Soldani}
+\relatore{Prof.~Loris Cannelli}
+\correlatore{\strut}                      % campo opzionale, invisibile ma con baseline
+\committente{\strut}                      % campo opzionale, invisibile ma con baseline
+\corso{Bachelor in Ingegneria Informatica TP}            % TODO: sostituire con il codice/nome ufficiale del corso
+\modulo{Progetto di Semestre}             % TODO: sostituire con codice/nome del modulo se richiesto
+\anno{2025--2026}
+\date{2 maggio 2026}
+
+\begin{document}
+
+% Copertina
+\pagenumbering{alph}
+\maketitle
+% --- Front matter ---------------------------------------------------------
+\frontmatter
+\pagenumbering{roman}
+\onehalfspacing
+
+\input{chapters/00_abstract}
+\tableofcontents
+\listoffigures
+\listoftables
+
+% --- Main matter ----------------------------------------------------------
+\mainmatter
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+% Sicurezza extra: se qualche pacchetto chiamasse \cleardoublepage,
+% in oneside non deve comunque inserire pagine bianche.
+\let\cleardoublepage\clearpage
+
+\input{chapters/00b_progetto_assegnato}
+\input{chapters/01_introduction}
+\input{chapters/02_background}
+\input{chapters/03_dataset}
+\input{chapters/04_methodology}
+\input{chapters/05_task1_loo}
+\input{chapters/06_task2_classification}
+\input{chapters/07_task3_aging}
+\input{chapters/08_mlops_architecture}
+\input{chapters/09_results_comparison}
+\input{chapters/10_monitoring}
+\input{chapters/12_conclusions}
+\input{chapters/13_conclusioni}
+
+% --- Bibliografia ---------------------------------------------------------
+\printbibliography[heading=bibintoc, title={Bibliografia}]
+
+% --- Acronimi -------------------------------------------------------------
+\glsaddall
+\renewcommand*{\glossaryentrynumbers}[1]{}
+\setglossarystyle{long}
+\setlength{\glsdescwidth}{0.78\linewidth}
+\printglossary[type=\acronymtype, title={Acronimi}, toctitle={Acronimi}]
+
+\end{document}

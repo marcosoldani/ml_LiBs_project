@@ -1,0 +1,190 @@
+\chapter{Task 1 -- Leave-One-Out Curve Reconstruction}
+\label{chap:task1}
+
+\paragraph{Riassunto del capitolo.} Il primo task chiede: data una
+matrice $5 \times 8$ di coppie $(Aging, Temperatura)$, possiamo
+ricostruire una coppia esclusa partendo dalle altre 39? Cinque modelli
+di regressione (Ridge, Random Forest, Gradient Boosting, KNN, Bagging
+Ridge) sono confrontati con una metrica triple ($R^{2}$, MSE, MAE) sul
+fold di test. Il vincitore è \textbf{KNN distance-weighted} con
+$R^{2} = 0.991$, seguito a brevissima distanza da Gradient Boosting
+($R^{2} = 0.990$). La generalizzazione visiva (curve previste vs vere)
+mostra ricostruzioni quasi perfette di semicerchio e coda diffusiva su
+tutti e 5 i livelli di SOC.
+
+\section{Problem statement}
+
+\textbf{Domanda di business.} Possiamo evitare di misurare una specifica
+coppia $(Aging^*, Temperature^*)$ e ricostruirla a partire dalle altre 39?
+
+\textbf{Domanda formale.} Date le 40 coppie $(A, T)$ del dataset, una
+viene esclusa interamente. Sull'addestramento contiamo
+$39 \times 5 \times 49 \approx 9560$ misure. Sul test contiamo
+$1 \times 5 \times 49 \approx 245$ misure: cinque curve di Nyquist
+complete da ricostruire (una per SOC).
+
+\textbf{Output atteso.} Un modello $f_\theta$ che, dato il vettore di nove
+feature di input $\mathbf{x}$, predica $\hat{y} = (\widehat{\mathrm{Re}}(Z),
+\widehat{\mathrm{Im}}(Z))$ con $R^{2} \geq 0.95$ per componente sulla
+combinazione esclusa.
+
+\section{Setup sperimentale}
+
+\begin{itemize}
+  \item \textbf{Dataset:} \num{9805} righe.
+  \item \textbf{Feature:} le nove di \cref{tab:regression-features}.
+  \item \textbf{Target:} $(\mathrm{Re}(Z), \mathrm{Im}(Z))$, multi-output.\newline
+  \item \textbf{Split:} maschera booleana sulle righe in cui 
+        $(Aging, Temperature) = (Aging^*, Temperature^*)$.
+  \item \textbf{Default dell'API e run riportato:} $Aging^*=2$,
+        $Temperature^* = \SI{22.5}{\celsius}$ (cella media a temperatura
+        ambiente). Sono i valori che la chiamata
+        \texttt{run\_leave\_one\_out()} senza argomenti usa, e quelli
+        a cui si riferisce la \cref{tab:task1-benchmark}.
+  \item \textbf{Seed:} \texttt{random\_state=42}.
+\end{itemize}
+
+L'API di produzione che esegue tutto questo è
+\codefile{src/models/task1\_loo.py::run\_leave\_one\_out(aging,
+temperature, df, models)} e restituisce il dataclass \texttt{LOOResult}
+(metriche, predizioni, tempo di training).
+
+\section{Modelli candidati}
+
+Cinque baseline, definite in \codefile{src/models/registry.py}:
+
+\begin{table}[H]
+  \centering
+  \caption{Baseline per Task 1 e Task 3.}
+  \label{tab:task1-models}
+  \begin{tabularx}{\linewidth}{l l X}
+    \toprule
+    \textbf{Modello} & \textbf{Famiglia} & \textbf{Iperparametri di default} \\
+    \midrule
+    Ridge Regression & Lineare + L2~\cite{hoerl1970ridge} & $\alpha = 1.0$ \\
+    Random Forest & Bagging di alberi~\cite{breiman2001random} & $n_\text{estim}=200$, $d_\text{max}=15$, leaves $\geq 2$ \\
+    Gradient Boosting & Boosting~\cite{friedman2001greedy} & $n_\text{estim}=150$, $d=5$, $\eta=0.1$ (in \texttt{MultiOutputRegressor}) \\
+    K-Nearest Neighbors & Instance-based & $k=10$, weight \texttt{distance} \\
+    Bagging (Ridge) & Meta-ensemble & 30 estimator Ridge, sub-sample $0.8$ \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+Solo il Gradient Boosting necessita del wrapper
+\texttt{MultiOutputRegressor} perché in
+scikit-learn~\cite{pedregosa2011scikit} è addestrato una componente
+alla volta.
+
+\newpage
+\section{Risultati del benchmark di default}
+
+I risultati riportati provengono da \codefile{models/task1/benchmark.json}
+generato da \texttt{python -m scripts.train\_all --tasks 1}. Tutte le
+metriche sono in scala originale ($\mathrm{Re}/\mathrm{Im}(Z)$ in
+\milliohm).
+
+\begin{table}[H]
+  \centering
+  \caption{Benchmark Task 1 (esclusione: $Aging=2$, $T=\SI{22.5}{\celsius}$).
+  La riga \emph{Mean predictor} è il baseline triviale che predice la
+  media dei target di training; serve come punto di riferimento
+  $R^2 \approx 0$.}
+  \label{tab:task1-benchmark}
+  \begin{tabular}{lrrr}
+    \toprule
+    \textbf{Modello} & $R^{2}$ & \acrshort{mse} & \acrshort{mae} \\
+    \midrule
+    K-Nearest Neighbors & \textbf{0.9909} & \textbf{0.0079} & \textbf{0.0653} \\
+    Gradient Boosting & 0.9895 & 0.0115 & 0.0676 \\
+    Random Forest & 0.9682 & 0.0512 & 0.1364 \\
+    Bagging (Ridge) & 0.6303 & 0.2954 & 0.3457 \\
+    Ridge Regression & 0.6302 & 0.2960 & 0.3462 \\
+    \midrule
+    \emph{Mean predictor (baseline)} & $\approx 0.0$ & $\mathrm{Var}(y_\text{test})$ & $\mathrm{MAD}(y_\text{test})$ \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+Vince \textbf{KNN distance-weighted} per pochi millesimi su Gradient
+Boosting; entrambi superano $R^{2} = 0.989$ sul test e sono
+statisticamente indistinguibili senza un intervallo di confidenza
+calcolato per bootstrap (cfr.~\cref{sec:bootstrap}). KNN ha il
+vantaggio operativo di essere $\sim 100\times$ più veloce in training:
+$\sim$\SI{0.02}{s} contro $\sim$\SI{1.6}{s} di Gradient Boosting,
+risultato del fatto che KNN è instance-based mentre GB è un ensemble di
+100 alberi. Random Forest segue a distanza ($R^{2}=0.97$), mentre i
+modelli lineari (Ridge, Bagging Ridge) saturano a $R^{2}\!\approx\!0.63$
+perché non possono catturare l'inflessione della curva sul piano di
+Nyquist.
+
+Il baseline \emph{mean predictor} è incluso per dare un'unità di misura
+al guadagno: si parte da $R^{2}\!\approx\!0$ e la versione linearmente
+saturata raggiunge $0.63$, mentre i due vincitori arrivano a $0.99$.
+
+\newpage
+\section{Hyperparameter tuning}
+
+\textbf{Splitter:} \acrshort{logo} sul gruppo $(Aging, Temperature)$
+(\cref{tab:cv-strategy}). Il codice (\codefile{src/models/tuning.py})
+\emph{sub-sample} a 10 dei 40 gruppi disponibili per tenere il grid
+search sotto i pochi minuti: l'oggetto \texttt{LeaveOneGroupOut}
+genera quindi 10 fold, non 40.
+
+\textbf{Grid (da \codefile{config.yaml}):}
+\begin{lstlisting}[language=YAML]
+gradient_boosting:
+  n_estimators: [100, 200]
+  max_depth: [3, 5]
+  learning_rate: [0.05, 0.1]
+\end{lstlisting}
+
+Otto combinazioni $\times$ 10 fold = 80 fit. Sul nostro hardware il
+tuning impiega \emph{minuti}, non ore.
+
+\textbf{Esito.} Il GridSearchCV è stato eseguito su Gradient Boosting
+(secondo classificato nel benchmark e candidato naturale al tuning per
+il maggior numero di iperparametri rispetto a KNN). Con la metrica di
+selezione \emph{neg-MSE} mediata sui 10 fold \acrshort{logo}
+sottocampionati, l'esito
+non è migliore del default sul fold di test. Va letto in chiave
+statistica: la valutazione finale è single-shot, mentre la selezione
+del grid è una media \acrshort{cv} su fold informativamente molto
+diversi. Senza intervallo di confidenza calcolato per bootstrap
+(cfr.~\cref{sec:bootstrap}) non possiamo escludere che default e
+configurazione tunata siano statisticamente indistinguibili. Manteniamo
+quindi i parametri di default per entrambi i modelli di testa.
+
+\section{Visualizzazione del fold di test}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.78\linewidth]{task1_metrics_bar.pdf}
+  \caption{Confronto del coefficiente $R^{2}$ sul fold di test per i
+  cinque modelli candidati. Il distacco dei due ensemble di testa (KNN,
+  Gradient Boosting) sui modelli lineari è netto.}
+  \label{fig:task1-metrics-bar}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.9\linewidth]{task1_actual_vs_pred.pdf}
+  \caption{Curve previste (rosso, tratteggiate) sovrapposte alle vere
+  (nero) per la coppia $(Aging=2, T=\SI{22.5}{\celsius})$ esclusa, una
+  per ciascuno dei 5 livelli di SOC. Il modello vincente (KNN
+  distance-weighted) ricostruisce semicerchio e coda diffusiva con
+  errore inferiore al millesimo di milliohm.}
+  \label{fig:task1-pred}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.9\linewidth]{task1_residuals_per_soc.pdf}
+  \caption{Distribuzione dei residui assoluti
+  $|\,\hat{Z} - Z\,|$ per ciascuno dei 5 SOC, sulla coppia esclusa
+  $(Aging=2, T=\SI{22.5}{\celsius})$. Le mediane sono concentrate
+  sotto la dispersione fisiologica delle misure
+  ($\sim$\SI{1}{\milli \Omega}); i SOC estremi (0 e 4) hanno una coda
+  leggermente più lunga, coerentemente con la maggior curvatura del
+  Nyquist a quegli stati di carica.}
+  \label{fig:task1-residuals}
+\end{figure}

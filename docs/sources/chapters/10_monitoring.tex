@@ -1,0 +1,204 @@
+\chapter{Monitoring \& Drift Detection}
+\label{chap:monitoring}
+
+\paragraph{Riassunto del capitolo.} Un modello in produzione si degrada
+silenziosamente se la distribuzione dei dati di servizio si discosta da
+quella di addestramento. Questo capitolo presenta il modulo di
+\textbf{drift detection} sviluppato come contributo originale del
+progetto: combina due test statistici complementari -- Kolmogorov–Smirnov
+(forma) e Population Stability Index (massa) -- e li espone tramite CLI
+ed endpoint REST. Il modulo si appoggia a un \emph{prediction log} su
+JSON-Lines per chiudere il ciclo fra produzione e monitoring.
+
+Questo capitolo descrive il modulo di \textbf{drift detection} sviluppato
+come contributo originale del progetto. L'obiettivo è rilevare quando la
+distribuzione dei dati di produzione si discosta da quella di
+addestramento, condizione che invalida silenziosamente le predizioni di
+qualsiasi modello supervisionato.
+
+\section{Cos'è la \emph{drift}}
+
+Un modello in produzione assume \emph{implicitamente} che la
+distribuzione dei dati che vede sia la stessa di quella su cui è stato
+addestrato (\emph{\acrshort{ml} \emph{training/serving skew}}). Quando
+questa ipotesi cessa di valere, la qualità delle predizioni si degrada.
+La tassonomia classica del \emph{dataset shift} di Quiñonero-Candela
+\emph{et al.}~\cite{quinonero2008dataset} distingue tre regimi:
+\begin{itemize}
+  \item \textbf{Data drift (covariate shift):} cambia $P(X)$ ma
+        $P(Y \mid X)$ resta uguale.
+  \item \textbf{Concept drift:} cambia $P(Y \mid X)$ a parità di $P(X)$.
+  \item \textbf{Prior shift:} cambia $P(Y)$ a parità di $P(X \mid Y)$.
+\end{itemize}
+
+Il modulo \codefile{src/monitoring/drift.py} si concentra sul \emph{data
+drift} numerico (covariate shift), perché è il caso operativo più
+realistico per una pipeline GEIS: una nuova campagna di misura può
+introdurre celle in condizioni leggermente diverse (sensori ricalibrati,
+PI termico aggiornato, batch produttivo nuovo).
+
+\section{I due test scelti}
+
+Implementiamo due test complementari:
+
+\subsection{Kolmogorov--Smirnov (\texorpdfstring{\acrshort{ks}}{KS})}
+
+È un test statistico non parametrico a due campioni che confronta le
+\emph{CDF empiriche} di reference e current:
+
+\[
+D = \sup_{x} |F_\text{ref}(x) - F_\text{cur}(x)|.
+\]
+
+Il p-value è calcolato analiticamente da \texttt{scipy.stats.ks\_2samp},
+basato sul test classico di Massey~\cite{massey1951ks}. Soglia di
+default: $\alpha = 0.05$. Vantaggio: sensibile a \emph{qualunque}
+cambiamento di forma (anche bimodale, varianza, ecc.). Svantaggio:
+sensibile anche a piccole differenze quando $n$ è grande.
+
+\subsection{Population Stability Index (\texorpdfstring{\acrshort{psi}}{PSI})}
+
+Misura quanto si è ``spostata la massa'' fra i bin. Si binnano i dati
+secondo i quantili della distribuzione di riferimento, poi:
+
+\[
+\mathrm{PSI} = \sum_{i=1}^{B}(p_i - q_i)\,\log\!\frac{p_i}{q_i},
+\]
+
+con $p_i$ e $q_i$ frazioni del bin $i$ in reference e current
+rispettivamente. Le soglie $0.10$ e $0.25$ sono la convenzione di settore
+introdotta nel \emph{credit-scoring}~\cite{siddiqi2017credit} e oggi
+diffusa anche per il monitoring ML:
+\begin{itemize}
+  \item $\mathrm{PSI} < 0.10$: nessun cambiamento significativo;
+  \item $0.10 \leq \mathrm{PSI} < 0.25$: drift minore;
+  \item $\mathrm{PSI} \geq 0.25$: drift maggiore.
+\end{itemize}
+
+\subsection{Perché entrambi}
+
+KS è bravo a vedere \emph{il cambio di forma} ma ha falsi negativi quando
+la distribuzione si trasla con la stessa forma. PSI è bravo a vedere
+\emph{spostamenti di massa} fra bin ma ha falsi negativi su distribuzioni
+multimodali quando una moda compensa l'altra. Combinandoli (si considera drift se almeno uno dei due metodi lo segnala) si riducono i falsi negativi.
+
+\newpage
+\section{API di programmazione}
+
+Le funzioni esposte da \codefile{src/monitoring/drift.py}:
+
+\begin{lstlisting}[language=Python]
+from src.monitoring import detect_dataset_drift, ks_drift, psi_drift
+
+# Test puntuale
+stat, p, drift = ks_drift(ref_array, cur_array, alpha=0.05)
+psi, drift = psi_drift(ref_array, cur_array, threshold=0.25)
+
+# Report dataset-level
+report = detect_dataset_drift(reference_df, current_df,
+                              features=["Z_real", "Z_imag"])
+print(report.share_drifted, report.drift_detected)
+print(report.to_dict())
+\end{lstlisting}
+
+Ogni feature drifted in almeno uno dei due test rientra nel verdetto.
+Una soglia aggregata pari al $25\,\%$ di feature drifted scatta il flag
+``drift\_detected = True''.
+
+\section{Il logger di predizioni}
+
+Per costruire la distribuzione \emph{current} a partire dal traffico
+reale, c'è bisogno di un canale di telemetria. Il modulo
+\codefile{src/monitoring/prediction\_log.py} è un piccolo store
+\emph{append-only} su JSON-Lines:
+
+\begin{lstlisting}[language=Python]
+from src.monitoring import log_prediction
+
+log_prediction(
+    task="task1",
+    inputs={"aging": 2, "temperature": 30.0},
+    outputs={"best_model": "Gradient Boosting", "R2": 0.99},
+    extra={"client": "lab_jenkins"},
+)
+\end{lstlisting}
+
+Il file \codefile{logs/predictions.jsonl} cresce in modo incrementale (un
+record per riga). I record sono leggibili in batch con
+\texttt{read\_predictions()} e ingeribili da \codefile{scripts/monitor.py}
+come distribuzione \emph{current} (\texttt{--current-format jsonl}).
+
+\section{Esposizione \texorpdfstring{\acrshort{rest}}{REST}}
+
+Il bridge FastAPI espone tre endpoint dedicati:
+\begin{itemize}
+  \item \textbf{POST /api/predictions/log} -- aggiunge un record al log;
+  \item \textbf{GET /api/predictions/recent?limit=N} -- ultimi $N$
+        record;
+  \item \textbf{GET /api/monitoring/drift?soc=X\&feature=Y} -- esegue il
+        confronto fra una sottosezione del dataset e il resto, demo per
+        l'utente.
+\end{itemize}
+
+In produzione il frontend (o un client che integri la pipeline) chiama
+\texttt{POST /api/predictions/log} dopo ogni \texttt{POST /api/taskN/run},
+allegando contesto (utente, ambiente). Un job batch programmato (es.~con
+\texttt{schedule}, \texttt{cron} o un sistema di orchestrazione) lancia
+\codefile{python -m scripts.monitor --current logs/predictions.jsonl
+--current-format jsonl} con cadenza giornaliera o settimanale.
+
+\section{Esempio di drift report}
+
+Confrontando la metà inferiore del dataset (Aging $\leq 2$) con la metà
+superiore (Aging $\geq 3$) -- una situazione \emph{deliberatamente
+drifted} -- il modulo produce:
+
+\begin{lstlisting}[language=JSON]
+{
+  "ks_alpha": 0.05,
+  "psi_threshold": 0.25,
+  "n_features": 6,
+  "n_drifted": 5,
+  "share_drifted": 0.83,
+  "drift_detected": true,
+  "features": [
+    {
+      "feature": "Z_real",
+      "ks_statistic": 0.41, "ks_p_value": 0.00,
+      "psi": 0.92,
+      "drift": true
+    },
+    {
+      "feature": "Frequency",
+      "ks_statistic": 0.01, "ks_p_value": 0.99,
+      "psi": 0.00,
+      "drift": false
+    },
+    ...
+  ]
+}
+\end{lstlisting}
+
+Il report mostra che $\mathrm{Re}(Z)$ è dichiarato drifted con altissima
+significatività (KS $p \approx 0$, PSI $= 0.92 \gg 0.25$), mentre la
+frequenza non drifta -- coerente con il fatto che lo sweep è uguale per
+ogni Aging.
+
+\section{Limitazioni del modulo attuale}
+
+\begin{itemize}
+  \item Nessuna detection di concept drift -- richiederebbe un canale
+        di feedback per i veri label, che nel nostro setup non esiste.
+  \item Nessun retraining automatico: il loop si chiude oggi con
+        un'azione umana (rilancio di
+        \texttt{python -m scripts.train\_all}).
+  \item Nessuna stima di robustezza statistica con bootstrap (KS e PSI
+        sono punto-stima dei loro veri valori).
+\end{itemize}
+
+Per scenari più complessi (drift online su stream ad alta frequenza,
+detector basati su modelli, supporto a feature non numeriche) la
+sostituzione naturale è una libreria specializzata come Alibi
+Detect~\cite{breunig2024alibidetect}: gli stessi pattern adottati nel
+nostro modulo (KS, PSI, JSON-Lines log) sono compatibili e il
+porting è incrementale.

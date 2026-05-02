@@ -1,0 +1,107 @@
+\chapter*{Abstract}
+\addcontentsline{toc}{chapter}{Abstract}
+
+\noindent
+Il presente progetto di semestre ha per oggetto la \textbf{predizione di parametri
+di celle Litio-Ione} caratterizzate tramite spettroscopia di impedenza
+elettrochimica galvanostatica (\acrshort{geis}) su una pouch
+\acrshort{licoo2} da \SI{10}{\ampere / \hour}. Il dataset, fornito dal
+gruppo di ricerca del Politecnico, conta
+\num{9805} misurazioni organizzate come \textbf{5 livelli di
+invecchiamento $\times$ 8 temperature $\times$ 5 \acrshort{soc}} e
+$\sim$49 frequenze logaritmicamente spaziate, ovvero \textbf{200 curve di
+Nyquist complete}.
+
+Il \textbf{compito primario} consisteva nello sviluppare tre notebook
+Jupyter contenenti modelli di machine learning per altrettanti task
+predittivi:
+\begin{enumerate}[leftmargin=*]
+  \item \textbf{Task~1 — Leave-One-Out (LOO):} ricostruzione di una
+        singola coppia (Aging, Temperatura) a partire dalle altre 39
+        (regressione multi-output).
+  \item \textbf{Task~2 — Young/Old Classification:} dati un livello
+        di Aging e un livello di \acrshort{soc}, predire la classe
+        \emph{young} (Aging $\leq 2$) vs \emph{old} (Aging $\geq 3$)
+        delle \textbf{8 curve di Nyquist} (una per temperatura)
+        corrispondenti a quella coppia, tenute fuori dall'addestramento.
+  \item \textbf{Task~3 — Aging Interpolation:} predizione di un
+        \emph{intero} livello di invecchiamento mai osservato in
+        addestramento.
+\end{enumerate}
+
+I migliori modelli ottenuti su un benchmark di cinque/sei stimatori
+sono rispettivamente \emph{KNN distance-weighted} ($R^{2} = 0.991$,
+Task 1), \emph{SVM con kernel RBF} (accuracy $= 1.000$ sulle 8 curve
+del hold-out di default $(Aging = 4, SOC = 3)$, Task 2) e di nuovo
+\emph{KNN distance-weighted} ($R^{2} = 0.986$, Task 3). I risultati
+sono prodotti da una pipeline interamente riproducibile (random seed
+fissato, splitter coerenti con il task) e tracciata con MLflow.
+
+\medskip
+\noindent
+\textbf{Estensione volontaria.} Sebbene la consegna fosse limitata ai
+notebook, abbiamo costruito \emph{sopra} di essi una piccola piattaforma
+MLOps end-to-end -- non richiesta -- per esporre i risultati a un utente
+non-developer e per esplorare nella pratica le prassi di settore:
+configurazione centralizzata in \acrshort{yaml}, logging strutturato con
+rotazione, suite di 81 test pytest con coverage gate al 90\,\% in CI
+(attuale: 95\,\%),
+scansioni di sicurezza (\texttt{bandit}, \texttt{pip-audit}), build
+Docker multistage, backend \texttt{FastAPI} con frontend React per il
+\emph{serving} e un modulo di \textbf{drift detection} basato su test di
+\acrshort{ks} e \acrshort{psi}.
+
+Il report descrive in dettaglio il dominio fisico, il dataset, la
+metodologia condivisa fra i tre task, i risultati ottenuti e -- in
+appendice concettuale -- l'architettura della piattaforma volontaria,
+chiudendosi con un'analisi dei limiti residui e delle direzioni di
+sviluppo futuro.
+
+\chapter*{Abstract (English)}
+\addcontentsline{toc}{chapter}{Abstract (English)}
+
+\noindent
+This semester project focuses on the \textbf{prediction of Lithium-Ion battery
+parameters} characterized via galvanostatic electrochemical impedance
+spectroscopy (\acrshort{geis}) on a \SI{10}{\ampere\hour}
+\acrshort{licoo2} pouch cell. The dataset, supplied by the Politecnico
+research group, contains \num{9805} measurements organized as
+\textbf{5 aging levels $\times$ 8 temperatures $\times$ 5 SOC} and
+$\sim$49 logarithmically spaced frequencies, i.e.~\textbf{200 complete
+Nyquist curves}.
+
+The \textbf{primary deliverable} consisted of three Jupyter notebooks
+implementing machine-learning models for three predictive tasks:
+\textbf{(1)} Leave-One-Out reconstruction of a single $(Aging,
+Temperature)$ pair from the other 39 (multi-output regression);
+\textbf{(2)} given an Aging level and a SOC level, predict the
+\emph{young} (Aging $\leq 2$) vs \emph{old} (Aging $\geq 3$) class of
+the \textbf{8 Nyquist curves} (one per temperature) corresponding to
+that pair, held out from training; \textbf{(3)} interpolation of an
+entire unseen aging level (multi-output regression).
+
+The best models on a benchmark of five/six estimators are respectively
+\emph{KNN distance-weighted} ($R^{2} = 0.991$, Task 1), \emph{SVM with
+RBF kernel} (accuracy $= 1.000$ on the 8 curves of the default
+hold-out $(Aging = 4, SOC = 3)$, Task 2) and again \emph{KNN
+distance-weighted} ($R^{2} = 0.986$, Task 3). Results are produced by
+a fully reproducible pipeline (fixed random seed, task-coherent
+splitters) and tracked with MLflow.
+
+\medskip
+\noindent
+\textbf{Voluntary extension.} On top of the notebooks we built a small
+end-to-end MLOps platform -- not part of the original deliverable -- to
+expose the models to a non-developer user and to gain hands-on
+experience with industry MLOps practices: centralized YAML
+configuration, structured rotating logging, an 81-test pytest suite
+with a 90\,\% coverage gate in CI (currently 95\,\%), security scanning (\texttt{bandit},
+\texttt{pip-audit}), multi-stage Docker build, FastAPI backend with
+React frontend for serving, and a \textbf{drift detection} module based
+on KS and PSI tests.
+
+The report covers the physical domain, the dataset, the methodology
+shared across the three tasks, the obtained results and -- as
+conceptual appendix -- the architecture of the voluntary platform,
+closing with an analysis of residual limitations and directions for
+future work.

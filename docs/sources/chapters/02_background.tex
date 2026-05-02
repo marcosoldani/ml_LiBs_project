@@ -1,0 +1,112 @@
+\chapter{Contesto sperimentale e background fisico}
+\label{chap:background}
+
+\paragraph{Riassunto del capitolo.} Il capitolo fornisce il minimo
+indispensabile di contesto fisico per leggere il resto del rapporto: il
+significato di \emph{Aging}, \emph{Temperatura} e \emph{\acrshort{soc}}
+nel nostro dataset, e l'interpretazione della curva di Nyquist come
+input \acrshort{ml}. Il dettaglio del banco di misura e del modello a
+circuito equivalente non fa parte del nostro lavoro: lo trattiamo come
+black-box fornito dal Politecnico di Milano.
+
+\section{Origine del dataset}
+\label{sec:experimental-setup}
+
+Il dataset proviene da una campagna di misure condotta presso il
+Politecnico di Milano ~\cite{polimi2025battery}. La
+caratterizzazione è stata effettuata con tecnica
+\acrshort{geis} (\emph{Galvanostatic Electrochemical Impedance
+Spectroscopy}) nel range $\sim$\SI{0.1}{\hertz}--\SI{10}{\kilo\hertz},
+su una pouch \acrshort{licoo2} commerciale (\cref{tab:cell-specs}), a
+varie temperature e stati di carica.
+
+\textbf{Scope del nostro lavoro.} Trattiamo i dati come forniti -- un
+insieme di curve $(\mathrm{Re}(Z), \mathrm{Im}(Z))$ campionate -- e non
+entriamo nel merito di strumentazione, protocollo di misura o
+identificazione dei parametri del modello a circuito equivalente, che
+sono di competenza del gruppo di ricerca del Politecnico.
+
+\begin{table}[H]
+  \centering
+  \caption{Caratteristiche elettriche principali della cella sotto test.}
+  \label{tab:cell-specs}
+  \begin{tabular}{ll}
+    \toprule
+    \textbf{Parametro} & \textbf{Valore} \\
+    \midrule
+    Tipo                                  & Pouch \acrshort{licoo2}, anodo grafite \\
+    Capacità nominale                     & \SI{10}{\ampere\hour} \\
+    Tensione massima di carica            & \SI{4.2}{\volt} \\
+    Tensione minima di scarica            & \SI{2.75}{\volt} \\
+    Dimensioni $L \times W \times H$      & $152 \times 72 \times 9$~mm \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsection{Mappatura dataset \texorpdfstring{$\to$}{->} paper}
+
+Le variabili provengono dal protocollo
+di misura del Politecnico:
+
+\begin{itemize}
+  \item \texttt{Aging} $\in \{0,1,2,3,4\}$ -- stadio di invecchiamento
+        accelerato della cella; il paper di riferimento studia un
+        singolo stato di aging, mentre il dataset esteso che abbiamo
+        ricevuto copre cinque livelli;
+  \item \texttt{Temperature} $\in \{20.0, 22.5, 25.0, 27.5, 30.0, 35.0,
+        40.0, 47.5\}$\,\si{\celsius} -- otto livelli, che campionano
+        più finemente la regione $20$--$30$\,°C e si spingono fino a
+        $47.5$\,°C;
+  \item \texttt{SOC} $\in \{0,1,2,3,4\}$ -- cinque stati di carica
+        equispaziati al $25\,\%$ ($0\,\%$, $25\,\%$, $50\,\%$, $75\,\%$,
+        $100\,\%$);
+  \item \texttt{Frequency} -- 49 punti log-spaziati nel range
+        $\sim$\SI{0.1}{\hertz}--\SI{10}{\kilo\hertz};
+  \item \texttt{Z\_real}, \texttt{Z\_imag} -- componenti dell'impedenza
+        complessa $Z = \mathrm{Re}(Z) + j\,\mathrm{Im}(Z)$, riportate in
+        \milliohm{} per leggibilità.
+\end{itemize}
+
+\section{La curva di Nyquist come input ML}
+
+Il diagramma di Nyquist riporta $\mathrm{Re}(Z)$ in ascissa e
+$-\mathrm{Im}(Z)$ in ordinata, una rappresentazione standard in
+spettroscopia di impedenza. Sui dati che usiamo si distinguono due
+zone qualitative:
+\begin{itemize}
+  \item un \emph{semicerchio} alle medie frequenze;
+  \item una \emph{coda diffusiva} alle basse frequenze.
+\end{itemize}
+
+Le due zone cambiano forma con \emph{Aging}, \emph{Temperatura} e
+\emph{\acrshort{soc}}: è esattamente questa variazione che i nostri
+modelli imparano a sfruttare. \textbf{Per il nostro lavoro non è
+necessario fittare un modello a circuito equivalente né identificare
+parametri elettrochimici}: trattiamo le curve come segnali numerici e
+le riassumiamo in poche \emph{feature} (vedi
+\cref{tab:regression-features,tab:classification-features}).
+
+\section{Effetto di temperatura, SOC e Aging sulle feature ML}
+
+Tre osservazioni qualitative motivano direttamente le scelte di
+feature engineering del \cref{chap:methodology}:
+\begin{enumerate}[leftmargin=*]
+  \item \textbf{Temperatura.} La dipendenza dalla temperatura non è
+        lineare; le costanti di tempo dei processi reversibili scalano
+        in modo Arrhenius. Pragmaticamente: la feature
+        $1 / (T + \SI{273.15}{\kelvin})$ è strutturalmente più
+        informativa di $T$ in scala lineare.
+  \item \textbf{\acrshort{soc}.} Cambia l'ampiezza del semicerchio e
+        l'orientamento della coda diffusiva, ma in modo regolare; basta
+        includerlo come feature, eventualmente in interazione con
+        $T$ e $Aging$.
+  \item \textbf{Aging.} È la dimensione che fa più variare la
+        \emph{forma} della curva. Per Task 1 e Task 3 lo usiamo come
+        \emph{input}; per Task 2 è il \emph{target} e va escluso dalle
+        feature.
+\end{enumerate}
+
+A parità di $(Aging, T, \acrshort{soc})$ resta una piccola dispersione
+fisiologica delle misure dell'ordine di
+$\mathcal{O}(\SI{1}{\milliohm})$, che fissa un \emph{floor} di errore
+irriducibile contro il quale nessun modello può andare oltre.

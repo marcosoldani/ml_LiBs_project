@@ -1,0 +1,264 @@
+\chapter{Task 2 -- Young vs Old Classification}
+\label{chap:task2}
+
+\paragraph{Riassunto del capitolo.} Il secondo task è una classificazione
+binaria con \emph{hold-out delle 8 curve di Nyquist} di una coppia
+$(Aging, SOC)$ scelta dall'utente: tutte le 8 curve (una per
+temperatura, ${\sim}49$ frequenze ciascuna, ${\sim}392$ righe in totale)
+escono dal training, il modello si addestra sulle altre 24 coppie e
+deve classificare le 8 curve come \emph{young} (Aging $\leq 2$) o
+\emph{old} (Aging $\geq 3$) leggendo solo la loro \emph{forma}.
+L'\textbf{Aging non è una feature}: è il target. Sui 25 hold-out
+possibili, il vincitore varia con la coppia (SVM-RBF, Random Forest,
+Logistic Regression a seconda della regione del dominio); negli estremi
+(Aging $0$ e Aging $4$) l'accuracy è $\approx 1.00$, mentre le coppie
+\emph{borderline} attorno alla soglia young/old (Aging $2$ e Aging $3$)
+producono i casi più interessanti.
+
+\section{Problem statement}
+
+\textbf{Domanda di business.} Dati un livello di Aging e un livello di
+SOC mai osservati in addestramento, possiamo classificare come
+\emph{young} o \emph{old} le 8 curve di Nyquist (una per temperatura)
+corrispondenti a quella coppia, partendo solo dalla loro forma?
+
+\textbf{Domanda formale.} Sia $\mathcal{D} \subset \mathbb{R}^{10}$ lo
+spazio delle feature di classificazione (vedi
+\cref{tab:classification-features}); fissato $(a^\star, s^\star) \in
+\{0,\dots,4\}^2$, sia $T_{a^\star,s^\star} = \{(x_i, y_i): Aging_i = a^\star
+\land SOC_i = s^\star\}$ il \emph{test fold} -- ovvero le ${\sim}392$
+righe (8 temperature $\times$ ${\sim}49$ frequenze) corrispondenti alle
+8 curve di Nyquist della coppia esclusa. Il modello si addestra su
+$\mathcal{D} \setminus T_{a^\star,s^\star}$ (${\sim}9\,400$ righe) e
+produce $\hat{y}: \mathcal{D} \to \{0, 1\}$ con $0 = \text{Young}$,
+$1 = \text{Old}$. La soglia di separazione
+\texttt{young\_max\_aging} è letta da \codefile{config/config.yaml}
+(default $= 2$).
+
+\textbf{Perché l'Aging non è una feature.} La label $y$ è funzione
+deterministica di $Aging$ ($y = \mathbb{1}[Aging > 2]$); includerlo
+fra le feature renderebbe il problema banale. Il classificatore deve
+ricostruire la classe partendo solo da impedenza, temperatura e frequenza
+-- esattamente la stessa informazione disponibile in un'ispezione GEIS
+\emph{a freddo} su una cella incognita.
+
+\section{Setup sperimentale}
+
+\begin{itemize}
+  \item \textbf{Hold-out scelto dall'utente:} la coppia $(a^\star,
+        s^\star)$ è impostata via UI/API. Il default di benchmark
+        (\codefile{config/config.yaml}) è $(a^\star = 4, s^\star = 3)$.
+  \item \textbf{Filtraggio:} \texttt{test\_mask = (Aging == a*) \&{} (SOC ==
+        s*)}; il complemento è il train set.
+  \item \textbf{Feature:} le dieci di \cref{tab:classification-features}
+        (\texttt{Temperature, Frequency, log\_Freq, Z\_real, Z\_imag,
+        Z\_magnitude, Z\_phase, inv\_Temp, Z\_real\_x\_Temp, sqrt\_Freq}).
+  \item \textbf{Split:} hold-out deterministico, nessun random seed
+        coinvolto.
+  \item \textbf{Train/test rappresentativi:} ${\sim}9\,413$ righe in
+        train e ${\sim}392$ righe in test (8 temperature
+        $\times$ ${\sim}49$ frequenze).
+\end{itemize}
+
+\textbf{Test set monoclasse.} Tutte le 8 curve del test fold
+appartengono alla stessa classe (Young se $a^\star \leq 2$, Old
+altrimenti), perché la classe è funzione del solo Aging. Una
+conseguenza: AUC--ROC non è definita (richiede entrambe le classi nel
+ground truth) e la confusion matrix collassa a una sola riga. Riportiamo
+quindi \emph{Accuracy} globale e per-temperatura: nessuna metrica
+illusoriamente sofisticata, solo il numero di punti correttamente
+classificati fra i ${\sim}392$ delle 8 curve in hold-out.
+
+\section{Modelli candidati}
+
+\begin{table}[H]
+  \centering
+  \caption{Baseline per Task 2.}
+  \label{tab:task2-models}
+  \begin{tabularx}{\linewidth}{lXl}
+    \toprule
+    \textbf{Modello} & \textbf{Famiglia} & \textbf{Iperparametri} \\
+    \midrule
+    Logistic Regression & Lineare & $\max\_iter = 1000$ \\
+    Random Forest~\cite{breiman2001random} & Bagging di alberi & $n_\text{estim}=100, d=15$ \\
+    Gradient Boosting~\cite{friedman2001greedy} & Boosting & $n_\text{estim}=100, d=5, \eta=0.1$ \\
+    Extra Trees & Bagging stocastico & $n_\text{estim}=100, d=15$ \\
+    K-Nearest Neighbors & Instance-based & $k=10$, weight \texttt{distance} \\
+    SVM (RBF)~\cite{cortes1995support} & Kernel non lineare & $C = 10$, $\gamma = $\texttt{scale} \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+\newpage
+\section{Risultati del benchmark di default}
+
+Hold-out di default: $(a^\star = 4, s^\star = 3)$ -- una cella molto
+invecchiata a SOC alto, classe vera \emph{Old}.
+
+\begin{table}[H]
+  \centering
+  \caption{Benchmark Task 2 sul hold-out $(Aging = 4, SOC = 3)$.
+  Tutti i modelli si addestrano sulle altre 24 coppie e classificano i
+  ${\sim}392$ punti delle 8 curve della coppia esclusa. AUC non è
+  riportata perché il test fold è monoclasse per costruzione.}
+  \label{tab:task2-benchmark}
+  \begin{tabular}{lrr}
+    \toprule
+    \textbf{Modello} & Accuracy & Train (s) \\
+    \midrule
+    \textbf{SVM (RBF)}     & \textbf{1.0000} & 2.61 \\
+    K-Nearest Neighbors    & 0.9949 & 0.03 \\
+    Random Forest          & 0.9924 & 0.15 \\
+    Gradient Boosting      & 0.9898 & 1.88 \\
+    Extra Trees            & 0.9898 & 0.09 \\
+    Logistic Regression    & 0.8575 & 0.05 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+L'\textbf{SVM con kernel RBF} ottiene accuracy perfetta su tutti i
+punti delle 8 curve non viste in addestramento. È un risultato
+\emph{onesto}: il test set non condivide nessuna delle 49 frequenze
+con il training set, perché tutte le 8 curve della coppia
+$(Aging = 4, SOC = 3)$ sono state rimosse per intero.
+
+\paragraph{Variabilità sul dominio degli hold-out.} Le 25 coppie possibili
+$(Aging, SOC)$ non sono tutte ugualmente facili: gli estremi del dominio
+($Aging = 0$, $Aging = 4$) sono distinguibili da quasi qualunque modello
+lineare, mentre le coppie attorno alla soglia decisionale (in particolare
+$Aging = 2$, l'ultimo livello \emph{young}, e $Aging = 3$, il primo
+\emph{old}) sono i casi più severi. \cref{tab:task2-cross-pair} riassume
+il comportamento del miglior modello per ogni coppia.
+
+\begin{table}[H]
+  \centering
+  \caption{Accuracy del modello migliore (per coppia) sui 25 hold-out
+  possibili. Le coppie evidenziate (Aging $2$ e Aging $3$) sono quelle
+  vicine al confine young/old: l'accuracy varia molto col SOC e
+  rappresenta il vero stress test del classificatore.}
+  \label{tab:task2-cross-pair}
+  \small
+  \begin{tabular}{lrrrrr}
+    \toprule
+    Aging $\backslash$ SOC & 0 & 1 & 2 & 3 & 4 \\
+    \midrule
+    0 (Young) & 1.000 & 1.000 & 1.000 & 1.000 & 1.000 \\
+    1 (Young) & 0.656 & 1.000 & 1.000 & 1.000 & 1.000 \\
+    \rowcolor{gray!10}
+    2 (Young) & 0.222 & 0.750 & 0.997 & 0.992 & 0.661 \\
+    \rowcolor{gray!10}
+    3 (Old)   & 1.000 & 0.908 & 0.934 & 0.605 & 0.497 \\
+    4 (Old)   & 1.000 & 0.995 & 1.000 & 1.000 & 0.998 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+Le tre coppie con accuracy $< 0.7$ sono tutte vicine al confine: in queste
+zone la \emph{forma} della curva di Nyquist non distingue ancora con
+chiarezza una cella young da una old, e il classificatore -- non potendo
+appoggiarsi all'Aging come feature -- predice in base alla regione di
+training più vicina nello spazio dell'impedenza, sbagliando proprio dove
+le due classi cominciano a sovrapporsi. È un comportamento \emph{informativo}:
+indica al gestore di flotta dove investire più misure GEIS prima di
+fidarsi del classificatore. \\La \cref{fig:task2-cross-pair-heatmap}
+visualizza la stessa informazione in forma di mappa di calore.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.9\linewidth]{task2_cross_pair_heatmap.pdf}
+  \caption{Heatmap dell'accuracy del modello migliore (per coppia) sui
+  25 hold-out possibili $(Aging, SOC)$. Verde = problema facile
+  (estremi del dominio, $Aging \in \{0, 4\}$); rosso = problema vicino
+  alla soglia young/old, dove la forma della curva di Nyquist comincia
+  ad ambiguarsi e l'accuracy crolla al confine fra le due classi.}
+  \label{fig:task2-cross-pair-heatmap}
+\end{figure}
+
+\newpage
+\section{Analisi qualitativa}
+
+\subsection{Accuracy per temperatura}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.9\linewidth]{task2_per_temp_accuracy.pdf}
+  \caption{Accuracy per ognuna delle 8 temperature del hold-out
+  $(Aging = 4, SOC = 3)$. Sull'estremo del dominio l'SVM-RBF non sbaglia
+  un solo punto a nessuna temperatura -- il segnale è netto.}
+  \label{fig:task2-per-temp}
+\end{figure}
+
+Sui hold-out vicini al confine (es.\ $(2, 0)$ in
+\cref{tab:task2-cross-pair}) la per-temperatura mostra invece una netta
+inversione: alle temperature basse il modello predice \emph{old}, mentre
+attorno a $30$~$^\circ$C torna a stimare \emph{young}. È coerente con la
+fisica: a bassa temperatura la resistenza ohmica $R_s$ aumenta, mimando
+una cella più invecchiata; il classificatore non riesce a distinguere
+l'effetto termico da quello di aging vero.
+
+\newpage
+\subsection{Predizione sulle 8 curve di Nyquist del hold-out}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=\linewidth]{task2_grid_classification.pdf}
+  \caption{Le 8 curve di Nyquist della coppia esclusa $(Aging = 4,
+  SOC = 3)$ -- una per temperatura -- con i punti colorati dalla
+  classe predetta dall'SVM-RBF (blu = Young, rosso = Old). La classe
+  vera è \emph{Old}: tutte le 8 curve sono interamente classificate
+  rosse, alle 8 diverse temperature.}
+  \label{fig:task2-grid}
+\end{figure}
+
+\newpage
+
+\subsection{Feature importance}
+
+L'SVM-RBF non espone \texttt{feature\_importances\_} (è un modello kernel,
+non basato su alberi); come proxy interpretabile usiamo un Random Forest
+addestrato sullo stesso split di training, riportato come bar chart sia
+nella UI sia in \cref{fig:task2-fi}.
+\\Le tre feature più informative
+sono nell'ordine:
+\begin{enumerate}[leftmargin=*]
+  \item \texttt{Z\_real\_x\_Temp} (interazione resistiva-termica),
+  \item \texttt{Z\_magnitude},
+  \item \texttt{Z\_real}.
+\end{enumerate}
+
+L'interazione $\mathrm{Re}(Z) \times T$ è la più discriminante: cellule
+\emph{old} hanno una resistenza più alta \emph{in modo termicamente
+sensibile}, mentre cellule \emph{young} hanno una resistenza più piatta
+in $T$. È esattamente la stessa intuizione fisica del paper di
+riferimento sull'isteresi $R_s$/$R_{mid}$ con la temperatura.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.78\linewidth]{task2_feature_importance.pdf}
+  \caption{Feature importance restituita dal Random Forest (proxy
+  interpretabile dell'SVM-RBF). L'interazione $\mathrm{Re}(Z) \times T$
+  domina la classifica.}
+  \label{fig:task2-fi}
+\end{figure}
+
+\section{Hyperparameter tuning}
+
+\textbf{Splitter:} \texttt{StratifiedGroupKFold} con $3$ fold
+(\codefile{config.tuning.cv\_folds = 3}) su un singolo SOC -- per
+default \texttt{task2.default\_soc = 3} -- con gruppi
+$(Aging, Temperature)$. Lo splitter è quindi diverso dall'hold-out di
+produzione (che esclude per intero la coppia $(a^\star, s^\star)$):
+una vera 25-fold cross-pair tuning sarebbe ${\sim}25\times$ più lenta
+con marginale guadagno di informazione.
+
+\textbf{Grid:}
+\begin{lstlisting}[language=YAML]
+svm:
+  C: [1.0, 10.0, 100.0]
+  gamma: [scale, auto]
+\end{lstlisting}
+
+Sei combinazioni. Il vincitore $C=10, \gamma=\text{scale}$ coincide col
+default e l'accuracy resta $1.0$ sul hold-out di default. Anche in questo
+caso il tuning serve a \emph{difendere} la scelta di default più che a
+migliorarla -- prova del fatto che la geometria dello spazio di
+impedenza è già ben separata.

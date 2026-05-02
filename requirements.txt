@@ -1,0 +1,23 @@
+numpy>=1.26,<3.0
+pandas>=2.0,<3.0
+scipy>=1.11,<2.0
+scikit-learn>=1.4,<2.0
+matplotlib>=3.8,<4.0
+seaborn>=0.13,<1.0
+plotly>=5.20,<6.0
+PyYAML>=6.0,<7.0
+joblib>=1.3,<2.0
+fastapi>=0.110,<1.0
+uvicorn[standard]>=0.27,<1.0
+pydantic>=2.5,<3.0
+mlflow-skinny>=2.10,<3.0
+
+# `cryptography` (transitive: mlflow → databricks-sdk → google-auth).
+# Platform-conditional pin: Apple Silicon Docker images SIGILL on
+# cryptography >=42 because the wheel uses CPU instructions the Docker
+# VM does not expose. On arm64 we therefore stay on 41.x and accept
+# the residual CVEs (CVE-2023-50782 et al.) for local dev only — they
+# are documented in CHANGELOG.md. On x86_64 (CI, Linux prod) we take
+# the latest line, which closes every known advisory up to mid-2026.
+cryptography>=41.0,<42.0; platform_machine == "arm64" or platform_machine == "aarch64"
+cryptography>=46.0.7; platform_machine != "arm64" and platform_machine != "aarch64"

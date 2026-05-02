@@ -1,0 +1,146 @@
+\chapter{Analisi as-is: il dataset di partenza}
+\label{chap:dataset}
+
+\paragraph{Riassunto del capitolo.} Questo capitolo è l'\emph{analisi
+as-is}: descrive con precisione i dati così come ci sono stati
+consegnati dal Politecnico. Il file MATLAB grezzo viene convertito in
+un CSV \emph{tidy} di \num{9805} righe e 6 colonne (Aging, Temperatura,
+SOC, Frequenza, Re/Im di $Z$). Quattro invarianti sono verificati da
+test automatici. L'esplorazione preliminare mostra una topologia di
+Nyquist coerente con la teoria e una separabilità young/old già
+visibile a occhio: due osservazioni che giustificano \emph{ex ante} la
+fattibilità dei tre task definiti nel \cref{chap:introduction}.
+
+\section{Origine e formato grezzo}
+
+Il dato grezzo arriva al progetto come file MATLAB
+(\codefile{data/raw/GEIS.mat}) prodotto dallo strumento Bio-Logic. La
+struttura interna è gerarchica:
+
+\begin{lstlisting}[language=Matlab]
+GEIS.mat
+ |-- Aging0
+ |    |-- GEIS_20    (matrice [n_freq x 5 SOC x 3])
+ |    |-- GEIS_22_5  ...
+ |    |-- ...
+ |    |-- GEIS_47_5
+ |-- Aging1
+ |-- ...
+ |-- Aging4
+\end{lstlisting}
+
+Ogni matrice 3D contiene, per ciascuno dei 5 livelli di SOC, le triplette
+$(\text{Frequency [Hz]},\newline \text{Re(Z) [\(\Omega\)]}, \text{Im(Z) [\(\Omega\)]})$.
+I valori grezzi sono in $\Omega$; noi moltiplichiamo per $10^3$ per
+ottenere milliohm, una scelta più leggibile per i plot di Nyquist su
+celle da pochi \milliohm{} di resistenza serie.
+
+\newpage
+\section{Pipeline di pulizia}
+
+La conversione è identica nel notebook
+\codefile{notebooks/0\_mat\_to\_csv.ipynb} (variante interattiva,
+pedagogica) e in \codefile{src/data/preprocessing.py::mat\_to\_dataframe}
+(variante di produzione, testata). I passaggi in entrambi sono:
+\begin{enumerate}[leftmargin=*]
+  \item caricamento con \texttt{scipy.io.loadmat(squeeze\_me=True,
+        struct\_as\_record=False)};
+  \item iterazione su \texttt{Aging\{0..4\}.GEIS\_<temperature>};
+  \item per ciascun SOC, espansione delle righe in record
+        $(Aging, Temperature, SOC, Frequency, Z_\text{real}, Z_\text{imag})$;
+  \item conversione $\Omega \to \milliohm{}$ tramite fattore $10^3$;
+  \item salvataggio CSV \emph{tidy} in
+        \codefile{data/processed/batteries\_cleaned\_dataset.csv}.
+\end{enumerate}
+
+Il risultato è un DataFrame da \num{9805} righe con sei colonne, riassunto
+in \cref{tab:dataset-schema}.
+
+\begin{table}[H]
+  \centering
+  \caption{Schema del dataset processato.}
+  \label{tab:dataset-schema}
+  \begin{tabular}{lll}
+    \toprule
+    \textbf{Colonna} & \textbf{Tipo} & \textbf{Range / unità} \\
+    \midrule
+    \texttt{Aging}        & int   & $\{0, 1, 2, 3, 4\}$ (fresh $\to$ aged) \\
+    \texttt{Temperature}  & float & 8 livelli in \si{\celsius}: 20.0, 22.5, 25.0, 27.5, 30.0, 35.0, 40.0, 47.5 \\
+    \texttt{SOC}          & int   & $\{0, 1, 2, 3, 4\}$ ($\approx$ 0\,\%, 25\,\%, 50\,\%, 75\,\%, 100\,\%) \\
+    \texttt{Frequency}    & float & \si{\hertz}, $\sim$49 valori log-spaziati in $[0.099, 10\,002]$ \\
+    \texttt{Z\_real}      & float & $\mathrm{Re}(Z)$ in \milliohm{} \\
+    \texttt{Z\_imag}      & float & $-\mathrm{Im}(Z)$ in \milliohm{} (convenzione \acrshort{eis}) \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\section{Sanity check}
+
+Quattro invarianti vengono verificati dai test in
+\codefile{tests/test\_data.py} e \codefile{tests/test\_preprocessing.py}:
+
+\begin{enumerate}[leftmargin=*]
+  \item $\texttt{df.shape} = (9805, 6)$;
+  \item nessun valore mancante: $\texttt{df.isna().sum().sum()} = 0$;
+  \item esattamente 200 gruppi
+        $(Aging, Temperature, SOC)$ -- 40 coppie ($A$, $T$) per 5 SOC;
+  \item $\texttt{Frequency}$ strettamente positiva e contenuta in
+        $[0.099, 10\,002]\,\si{\hertz}$.
+\end{enumerate}
+
+\newpage
+\section{Esplorazione preliminare}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.68\linewidth]{dataset_nyquist.pdf}
+  \caption{Curve di Nyquist al livello di invecchiamento centrale
+  ($Aging = 2$, $\text{SOC} = 2$) per le otto temperature del dataset.
+  La forma a semicerchio + coda diffusiva è la firma elettrochimica
+  della cella; cresce in ampiezza al diminuire della temperatura.}
+  \label{fig:dataset-nyquist}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.68\linewidth]{dataset_aging_evolution.pdf}
+  \caption{Evoluzione delle curve di Nyquist con il livello di
+  invecchiamento, a $T = \SI{25}{\celsius}$ e SOC $=2$. Il semicerchio
+  si allarga e la coda si trasla a destra al crescere dell'Aging --
+  giustificazione empirica della separabilità che il Task 2 sfrutterà.}
+  \label{fig:dataset-aging-evolution}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.68\linewidth]{dataset_boxplot_zreal.pdf}
+  \caption{Distribuzione di $\mathrm{Re}(Z)$ stratificata per livello
+  di Aging, aggregata su tutte le temperature, SOC e frequenze. La
+  mediana sale monotonamente con l'invecchiamento.}
+  \label{fig:dataset-boxplot}
+\end{figure}
+
+Le prime osservazioni guidano le scelte di feature engineering del
+prossimo capitolo:
+\begin{itemize}
+  \item Le curve di Nyquist a parità di Aging hanno topologia simile
+        (semicerchio + coda) ma \emph{traslate} verso destra al crescere
+        dell'aging, conferma del fatto che $R_\mathrm{s}$ e
+        $R_\mathrm{ct}$ aumentano con l'invecchiamento.
+  \item La media di $\mathrm{Re}(Z)$ in funzione di $T$ ha un andamento
+        monotono decrescente in alta frequenza (cinetica più rapida) e
+        meno netto in bassa frequenza, dove dominano i processi
+        diffusivi.
+  \item A SOC fissato, le distribuzioni di $Z_\text{real}$ per cellule
+        \emph{young} (Aging 0--2) sono visibilmente separate da quelle
+        \emph{old} (Aging 3--4) -- giustificazione empirica per la natura
+        binaria del Task~2.
+\end{itemize}
+
+\section{Caching e accesso}
+
+\codefile{src/data/loader.py::load\_dataset} è decorato con
+\texttt{@functools.lru\_cache(maxsize=1)}: il CSV viene letto una sola
+volta per processo. Il loader ordina sempre per (Aging, \newline Temperature, 
+SOC, Frequency) in modo che split successivi (anche complessi come il
+\acrshort{logo}) restituiscano indici stabili e riproducibili.
