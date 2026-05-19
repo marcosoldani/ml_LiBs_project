@@ -1,6 +1,7 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026) (preloaded format=pdflatex 2026.4.27)  2 MAY 2026 17:12
+This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026) (preloaded format=pdflatex 2026.4.27)  2 MAY 2026 19:42
 entering extended mode
  restricted \write18 enabled.
+ file:line:error style messages enabled.
  %&-line parsing enabled.
 **main.tex
 (./main.tex
@@ -1646,7 +1647,7 @@ Package biblatex Info: ... file 'main.bbl' found.
 (./main.bbl)
 Package biblatex Info: Reference section=0 on input line 37.
 Package biblatex Info: Reference segment=0 on input line 37.
-<logoprima.png, id=400, 483.60675pt x 99.61215pt>
+<logoprima.png, id=404, 483.60675pt x 99.61215pt>
 File: logoprima.png Graphic file (type png)
 <use logoprima.png>
 Package pdftex.def Info: logoprima.png  used on input line 43.
@@ -1667,7 +1668,7 @@ LaTeX Font Info:    Font shape `T1/phv/bx/n' in size <14> not available
 (Font)              Font shape `T1/phv/b/n' tried instead on input line 43.
 LaTeX Font Info:    Font shape `T1/phv/b/n' will be
 (Font)              scaled to size 13.29996pt on input line 43.
-<logoverticale.png, id=401, 69.25874pt x 649.42625pt>
+<logoverticale.png, id=405, 69.25874pt x 649.42625pt>
 File: logoverticale.png Graphic file (type png)
 <use logoverticale.png>
 Package pdftex.def Info: logoverticale.png  used on input line 43.
@@ -1715,7 +1716,7 @@ Package microtype Info: Loading generic protrusion settings for font family
 (microtype)             `cmtt' (encoding: T1).
 (microtype)             For optimal results, create family-specific settings.
 (microtype)             See the microtype manual for details.
-<logoheader.png, id=423, 209.1012pt x 12.74646pt>
+<logoheader.png, id=427, 209.1012pt x 12.74646pt>
 File: logoheader.png Graphic file (type png)
 <use logoheader.png>
 Package pdftex.def Info: logoheader.png  used on input line 60.
@@ -1785,7 +1786,7 @@ Package microtype Info: Loading generic protrusion settings for font family
 (microtype)             For optimal results, create family-specific settings.
 (microtype)             See the microtype manual for details.
 
-! Missing $ inserted.
+./main.lof:13: Missing $ inserted.
 <inserted text> 
                 $
 l.13 ... stati di carica.}}{22}{figure.caption.27}
@@ -1793,7 +1794,7 @@ l.13 ... stati di carica.}}{22}{figure.caption.27}
 I've inserted a begin-math/end-math symbol since I think
 you left one out. Proceed, with fingers crossed.
 
-! Missing $ inserted.
+./main.lof:13: Missing $ inserted.
 <inserted text> 
                 $
 l.13 ... stati di carica.}}{22}{figure.caption.27}
@@ -1997,7 +1998,7 @@ File: logoverticale.png Graphic file (type png)
 Package pdftex.def Info: logoverticale.png  used on input line 91.
 (pdftex.def)             Requested size: 13.35057pt x 125.19212pt.
 [10]
-<figures/dataset_nyquist.pdf, id=793, 379.94008pt x 282.88875pt>
+<figures/dataset_nyquist.pdf, id=798, 379.94008pt x 282.88875pt>
 File: figures/dataset_nyquist.pdf Graphic file (type pdf)
 <use figures/dataset_nyquist.pdf>
 Package pdftex.def Info: figures/dataset_nyquist.pdf  used on input line 96.
@@ -2006,13 +2007,13 @@ LaTeX Font Info:    Font shape `T1/phv/m/n' will be
 (Font)              scaled to size 6.64998pt on input line 100.
 LaTeX Font Info:    Font shape `T1/phv/m/n' will be
 (Font)              scaled to size 4.74998pt on input line 100.
-<figures/dataset_aging_evolution.pdf, id=794, 440.04399pt x 282.88875pt>
+<figures/dataset_aging_evolution.pdf, id=799, 440.04399pt x 282.88875pt>
 File: figures/dataset_aging_evolution.pdf Graphic file (type pdf)
 <use figures/dataset_aging_evolution.pdf>
 Package pdftex.def Info: figures/dataset_aging_evolution.pdf  used on input lin
 e 106.
 (pdftex.def)             Requested size: 284.40942pt x 182.83952pt.
-<figures/dataset_boxplot_zreal.pdf, id=795, 355.56778pt x 224.31792pt>
+<figures/dataset_boxplot_zreal.pdf, id=800, 355.56778pt x 224.31792pt>
 File: figures/dataset_boxplot_zreal.pdf Graphic file (type pdf)
 <use figures/dataset_boxplot_zreal.pdf>
 Package pdftex.def Info: figures/dataset_boxplot_zreal.pdf  used on input line 
@@ -2155,25 +2156,25 @@ src/models/tuning.py\T1/phv/m/n/10.95 (-20) )
 
 LaTeX Font Info:    Font shape `T1/cmtt/bx/n' in size <10> not available
 (Font)              Font shape `T1/cmtt/m/n' tried instead on input line 133.
-<figures/task1_metrics_bar.pdf, id=1078, 493.43321pt x 251.5075pt>
+<figures/task1_metrics_bar.pdf, id=1083, 493.43321pt x 251.5075pt>
 File: figures/task1_metrics_bar.pdf Graphic file (type pdf)
 <use figures/task1_metrics_bar.pdf>
 Package pdftex.def Info: figures/task1_metrics_bar.pdf  used on input line 161.
 
 (pdftex.def)             Requested size: 326.23735pt x 166.2948pt.
-<figures/task1_actual_vs_pred.pdf, id=1079, 788.0253pt x 262.2677pt>
+<figures/task1_actual_vs_pred.pdf, id=1084, 788.0253pt x 262.2677pt>
 File: figures/task1_actual_vs_pred.pdf Graphic file (type pdf)
 <use figures/task1_actual_vs_pred.pdf>
 Package pdftex.def Info: figures/task1_actual_vs_pred.pdf  used on input line 1
 70.
 (pdftex.def)             Requested size: 376.42575pt x 125.28278pt.
-<figures/task1_residuals_per_soc.pdf, id=1080, 657.85777pt x 235.4475pt>
+<figures/task1_residuals_per_soc.pdf, id=1085, 657.85777pt x 235.4475pt>
 File: figures/task1_residuals_per_soc.pdf Graphic file (type pdf)
 <use figures/task1_residuals_per_soc.pdf>
 Package pdftex.def Info: figures/task1_residuals_per_soc.pdf  used on input lin
 e 181.
 (pdftex.def)             Requested size: 376.42575pt x 134.7238pt.
-! Missing $ inserted.
+./chapters/05_task1_loo.tex:188: Missing $ inserted.
 <inserted text> 
                 $
 l.188   Nyquist a quegli stati di carica.}
@@ -2181,7 +2182,7 @@ l.188   Nyquist a quegli stati di carica.}
 I've inserted a begin-math/end-math symbol since I think
 you left one out. Proceed, with fingers crossed.
 
-! Missing $ inserted.
+./chapters/05_task1_loo.tex:188: Missing $ inserted.
 <inserted text> 
                 $
 l.188   Nyquist a quegli stati di carica.}
@@ -2192,7 +2193,7 @@ With luck, this will get me unwedged. But if you
 really didn't forget anything, try typing `2' now; then
 my insertion and my current dilemma will both disappear.
 
-! Missing $ inserted.
+./chapters/05_task1_loo.tex:188: Missing $ inserted.
 <inserted text> 
                 $
 l.188   Nyquist a quegli stati di carica.}
@@ -2200,7 +2201,7 @@ l.188   Nyquist a quegli stati di carica.}
 I've inserted a begin-math/end-math symbol since I think
 you left one out. Proceed, with fingers crossed.
 
-! Missing $ inserted.
+./chapters/05_task1_loo.tex:188: Missing $ inserted.
 <inserted text> 
                 $
 l.188   Nyquist a quegli stati di carica.}
@@ -2261,7 +2262,7 @@ File: logoverticale.png Graphic file (type png)
 Package pdftex.def Info: logoverticale.png  used on input line 164.
 (pdftex.def)             Requested size: 13.35057pt x 125.19212pt.
  [25]
-<figures/task2_cross_pair_heatmap.pdf, id=1335, 451.77397pt x 301.05762pt>
+<figures/task2_cross_pair_heatmap.pdf, id=1340, 451.77397pt x 301.05762pt>
 File: figures/task2_cross_pair_heatmap.pdf Graphic file (type pdf)
 <use figures/task2_cross_pair_heatmap.pdf>
 Package pdftex.def Info: figures/task2_cross_pair_heatmap.pdf  used on input li
@@ -2276,7 +2277,7 @@ File: logoverticale.png Graphic file (type png)
 Package pdftex.def Info: logoverticale.png  used on input line 176.
 (pdftex.def)             Requested size: 13.35057pt x 125.19212pt.
  [26 <./figures/task2_cross_pair_heatmap.pdf>]
-<figures/task2_per_temp_accuracy.pdf, id=1402, 467.7569pt x 248.52762pt>
+<figures/task2_per_temp_accuracy.pdf, id=1407, 467.7569pt x 248.52762pt>
 File: figures/task2_per_temp_accuracy.pdf Graphic file (type pdf)
 <use figures/task2_per_temp_accuracy.pdf>
 Package pdftex.def Info: figures/task2_per_temp_accuracy.pdf  used on input lin
@@ -2291,7 +2292,7 @@ File: logoverticale.png Graphic file (type png)
 Package pdftex.def Info: logoverticale.png  used on input line 198.
 (pdftex.def)             Requested size: 13.35057pt x 125.19212pt.
  [27 <./figures/task2_per_temp_accuracy.pdf>]
-<figures/task2_grid_classification.pdf, id=1456, 682.39005pt x 413.52882pt>
+<figures/task2_grid_classification.pdf, id=1461, 682.39005pt x 413.52882pt>
 File: figures/task2_grid_classification.pdf Graphic file (type pdf)
 <use figures/task2_grid_classification.pdf>
 Package pdftex.def Info: figures/task2_grid_classification.pdf  used on input l
@@ -2306,7 +2307,7 @@ File: logoverticale.png Graphic file (type png)
 Package pdftex.def Info: logoverticale.png  used on input line 212.
 (pdftex.def)             Requested size: 13.35057pt x 125.19212pt.
  [28 <./figures/task2_grid_classification.pdf>]
-<figures/task2_feature_importance.pdf, id=1542, 458.50958pt x 248.52762pt>
+<figures/task2_feature_importance.pdf, id=1547, 458.50958pt x 248.52762pt>
 File: figures/task2_feature_importance.pdf Graphic file (type pdf)
 <use figures/task2_feature_importance.pdf>
 Package pdftex.def Info: figures/task2_feature_importance.pdf  used on input li
@@ -2363,26 +2364,26 @@ File: logoverticale.png Graphic file (type png)
 Package pdftex.def Info: logoverticale.png  used on input line 147.
 (pdftex.def)             Requested size: 13.35057pt x 125.19212pt.
  [33]
-<figures/task3_metrics_bar.pdf, id=1633, 491.8314pt x 251.5075pt>
+<figures/task3_metrics_bar.pdf, id=1638, 491.8314pt x 251.5075pt>
 File: figures/task3_metrics_bar.pdf Graphic file (type pdf)
 <use figures/task3_metrics_bar.pdf>
 Package pdftex.def Info: figures/task3_metrics_bar.pdf  used on input line 152.
 
 (pdftex.def)             Requested size: 376.42575pt x 192.49855pt.
-<figures/task3_per_temp.pdf, id=1634, 539.36835pt x 252.00458pt>
+<figures/task3_per_temp.pdf, id=1639, 539.36835pt x 252.00458pt>
 File: figures/task3_per_temp.pdf Graphic file (type pdf)
 <use figures/task3_per_temp.pdf>
 Package pdftex.def Info: figures/task3_per_temp.pdf  used on input line 161.
 (pdftex.def)             Requested size: 376.42575pt x 175.87903pt.
 LaTeX Font Info:    Font shape `TS1/phv/m/n' will be
 (Font)              scaled to size 9.49997pt on input line 165.
-<figures/task3_grid_sample.pdf, id=1635, 424.74747pt x 392.57053pt>
+<figures/task3_grid_sample.pdf, id=1640, 424.74747pt x 392.57053pt>
 File: figures/task3_grid_sample.pdf Graphic file (type pdf)
 <use figures/task3_grid_sample.pdf>
 Package pdftex.def Info: figures/task3_grid_sample.pdf  used on input line 171.
 
 (pdftex.def)             Requested size: 284.40942pt x 262.87712pt.
-<figures/task3_error_distribution.pdf, id=1636, 412.81226pt x 253.87572pt>
+<figures/task3_error_distribution.pdf, id=1641, 412.81226pt x 253.87572pt>
 File: figures/task3_error_distribution.pdf Graphic file (type pdf)
 <use figures/task3_error_distribution.pdf>
 Package pdftex.def Info: figures/task3_error_distribution.pdf  used on input li
@@ -2707,27 +2708,17 @@ Package cleveref Info: loaded `italian' language definitions on input line 16.
 LaTeX2e <2025-11-01>
 L3 programming layer <2026-01-19>
  ***********
-
-
-LaTeX Warning: Label(s) may have changed. Rerun to get cross-references right.
-
-
-Package rerunfilecheck Warning: File `main.out' has changed.
-(rerunfilecheck)                Rerun to get outlines right
-(rerunfilecheck)                or use package `bookmark'.
-
-Package rerunfilecheck Info: Checksums for `main.out':
-(rerunfilecheck)             Before: 89831D254B60F18970DD54397201603E;15381
-(rerunfilecheck)             After:  0C7B987116AB6C129187C26B25B42A04;15467.
+Package rerunfilecheck Info: File `main.out' has not changed.
+(rerunfilecheck)             Checksum: 0C7B987116AB6C129187C26B25B42A04;15467.
 Package logreq Info: Writing requests to 'main.run.xml'.
 \openout1 = `main.run.xml'.
 
  ) 
 Here is how much of TeX's memory you used:
- 58280 strings out of 467525
- 1208715 string characters out of 5418982
- 2303375 words of memory out of 5000000
- 85488 multiletter control sequences out of 15000+600000
+ 58281 strings out of 467525
+ 1208728 string characters out of 5418982
+ 2303430 words of memory out of 5000000
+ 85489 multiletter control sequences out of 15000+600000
  734363 words of font info for 476 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  103i,16n,111p,2512b,3055s stack positions out of 10000i,1000n,20000p,200000b,200000s
@@ -2754,10 +2745,10 @@ ist/fonts/type1/urw/helvetic/uhvbo8a.pfb></usr/local/texlive/2026/texmf-dist/fo
 nts/type1/urw/helvetic/uhvr8a.pfb></usr/local/texlive/2026/texmf-dist/fonts/typ
 e1/urw/helvetic/uhvro8a.pfb></usr/local/texlive/2026/texmf-dist/fonts/type1/urw
 /times/utmr8a.pfb>
-Output written on main.pdf (65 pages, 798784 bytes).
+Output written on main.pdf (65 pages, 798351 bytes).
 PDF statistics:
- 2265 PDF objects out of 2487 (max. 8388607)
- 1362 compressed objects within 14 object streams
+ 2269 PDF objects out of 2487 (max. 8388607)
+ 1366 compressed objects within 14 object streams
  343 named destinations out of 1000 (max. 500000)
- 106938 words of extra memory for PDF output out of 106986 (max. 10000000)
+ 106946 words of extra memory for PDF output out of 106986 (max. 10000000)
 
