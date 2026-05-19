@@ -9,6 +9,7 @@ services:
       - ./data:/app/data
       - ./models:/app/models
       - ./logs:/app/logs
+      - ./docs:/app/docs
     environment:
       - PYTHONUNBUFFERED=1
     restart: unless-stopped
